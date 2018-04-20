@@ -1,0 +1,8 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+"F:\ZZM\UnrealWorkspace\PlatformerGame\Plugins\FootIK\Intermediate\Build\Win64\UE4\Development\FootIKRuntime\Module.FootIKRuntime.cpp.obj"
+"F:\ZZM\UnrealWorkspace\PlatformerGame\Plugins\FootIK\Intermediate\Build\Win64\UE4\Development\FootIKRuntime\Module.FootIKRuntime.gen.cpp.obj"
+"F:\ZZM\UnrealWorkspace\PlatformerGame\Intermediate\Build\Win64\UE4\Development\FootIKRuntime\PCLaunch.rc.res"
+/OUT:"F:\ZZM\UnrealWorkspace\PlatformerGame\Plugins\FootIK\Binaries\Win64\UE4-FootIKRuntime.lib"
