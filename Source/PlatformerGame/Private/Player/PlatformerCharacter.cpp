@@ -27,7 +27,8 @@ void APlatformerCharacter::PostInitializeComponents()
 	{
 		UE_LOG(LogPlatformer, Log, TEXT("APlatformerCharacter::PostInitializeComponents Subscribe !!!"));
 		
-		FRuyiSDKManager::Instance()->SDK()->Subscriber->Subscribe("service/inputmanager_internal");
+		//FRuyiSDKManager::Instance()->SDK()->Subscriber->Subscribe("service/inputmanager_internal");
+		FRuyiSDKManager::Instance()->SDK()->Subscriber->Subscribe("service/user_service_external");
 		FRuyiSDKManager::Instance()->SDK()->Subscriber->AddMessageHandler(this, &APlatformerCharacter::InputStateChangeHandler);
 	} else 
 	{
@@ -37,238 +38,192 @@ void APlatformerCharacter::PostInitializeComponents()
 
 void APlatformerCharacter::InputStateChangeHandler(std::string topic, apache::thrift::TBase* msg)
 {
-	//FString fTopic = UTF8_TO_TCHAR(topic.c_str());
+	FString fTopic = UTF8_TO_TCHAR(topic.c_str());
 	//UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler DDDDDDDDDDDDDD topic:%s"), *fTopic);
 
 	//auto idsc = dynamic_cast<Ruyi::SDK::InputManager::InputActionTriggered*>(msg);
-	auto idsc = dynamic_cast<Ruyi::SDK::InputManager::InputDeviceStateChanged*>(msg);
-
+	//auto idsc = dynamic_cast<Ruyi::SDK::InputManager::InputDeviceStateChanged*>(msg);
+	auto idsc = dynamic_cast<Ruyi::SDK::UserServiceExternal::InputActionEvent*>(msg);
+	
 	if (idsc == NULL) 
 	{
 		return;
 	}
 	
-	//UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler header:%d, x360:%d, dgamepad:%d, djoystick:%d, dkeyboard:%d, dmouse:%d, ruyicontroller:%d"), idsc->__isset.header, idsc->__isset.x360, idsc->__isset.dgamepad, idsc->__isset.djoystick, idsc->__isset.dkeyboard, idsc->__isset.dmouse, idsc->__isset.ruyicontroller);
+	//userId is the id of the current logged account
+	FString fUserId = UTF8_TO_TCHAR(idsc->userId.c_str());
+	FString fAction = UTF8_TO_TCHAR(idsc->action.c_str());
 
-	//could be multiple input source so I use "if" not "else if"
-	if (idsc->__isset.header == 1)
+	//std::vector<TriggerKeys>  Triggers is the numbers of current input from any device
+	//TriggerKeys 
+	//DeviceType: to identify your input device
+	//Key: the key of your input device
+	//NewValue/OldValue:  could be three value:0,1,2.  1 means press Down 2 means release 0 not define yet
+	//NewValue is the current key state, if your press down, NewValue will be 1, when you release, NewValue will be 2, OldValue will be 1
+	int triggerNumber = idsc->Triggers.size();
+
+	UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler userId:%s action:%s triggers Num:%d"), *fUserId, *fAction, triggerNumber);
+	std::for_each(idsc->Triggers.begin(), idsc->Triggers.end(), [&](Ruyi::SDK::UserServiceExternal::TriggerKeys& key) 
 	{
-		//UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler header:%d"), idsc->__isset.header);
-	}
-	if (idsc->__isset.x360 == 1)
-	{
-		int64_t PacketNumber = idsc->x360.PacketNumber;
-		//FString fDeviceId = UTF8_TO_TCHAR(idsc->x360.DeviceId.c_str());
-		int16_t LeftThumbDeadZone = idsc->x360.LeftThumbDeadZone;
-		int16_t RightThumbDeadZone = idsc->x360.RightThumbDeadZone;
-		int32_t Buttons = idsc->x360.Buttons;
-		int8_t LeftTrigger = idsc->x360.LeftTrigger;
-		int8_t RightTrigger = idsc->x360.RightTrigger;
-		int16_t LeftThumbX = idsc->x360.LeftThumbX;
-		int16_t LeftThumbY = idsc->x360.LeftThumbY;
-		int16_t RightThumbX = idsc->x360.RightThumbX;
-		int16_t RightThumbY = idsc->x360.RightThumbY;
-		bool isPressed = true;
-		bool isReleased = false;
-		//StartJump
-		if ((Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::DPadUp == Buttons) && isPressed)
+		UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler deviceType:%d, key:%d, newValue:%d, oldValue:%d"), key.DeviceType, key.Key, key.NewValue, key.OldValue);
+
+		if (Ruyi::SDK::GlobalInputDefine::RuyiInputDeviceType::Keyboard == key.DeviceType)
 		{
-			OnStartJump();
-		}
-		//StopJump
-		if ((Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::DPadUp == Buttons) && isReleased)
-		{
-			OnStopJump();
-		}
-		//OnStartSlide
-		if ((Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::DPadDown == Buttons) && isPressed)
-		{
-			OnStartSlide();
-		}
-		//OnStopSlide
-		if ((Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::DPadDown == Buttons) && isReleased)
-		{
-			OnStopSlide();
-		}
-		//InputLeft
-		if ((Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::DPadLeft == Buttons) && isPressed)
-		{
-			InputLeft();
-		}
-		//InputRight
-		if ((Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::DPadRight == Buttons) && isPressed)
-		{
-			InputRight();
-		}
-		//InputOK
-		if (Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::B == Buttons && isPressed)
-		{
-			InputOK();
-		}
-		//InGameMenu
-		if (Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::Start == Buttons && isPressed)
-		{
-			APlatformerPlayerController* MyPC = Cast<APlatformerPlayerController>(Controller);
-			if (MyPC)
+			//StartJump
+			if ((Ruyi::SDK::GlobalInputDefine::Key::W == key.Key || Ruyi::SDK::GlobalInputDefine::Key::Up == key.Key) && (1 == key.NewValue))
 			{
-				MyPC->OnToggleInGameMenu();
+				OnStartJump();
 			}
-		}
-		//StartGame
-		if (Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::A == Buttons && isPressed)
-		{
-			//this one listened in blueprints
-			//So if you wanna call the input logic in blueprints but still get the input from Ruyi SDK
-			//We recommand you listener all the input in c++ from Ruyi SDK, then call in blueprints
-		}
-		UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler x360 PacketNumber:%d, LeftThumbDeadZone:%d, RightThumbDeadZone:%d"), PacketNumber, LeftThumbDeadZone, RightThumbDeadZone);
-		UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler x360 Buttons:%d, LeftTrigger:%d, RightTrigger:%d"), Buttons, LeftTrigger, RightTrigger);
-		UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler x360 LeftThumbX:%d, LeftThumbY:%d, RightThumbX:%d, RightThumbY:%d"), LeftThumbX, LeftThumbY, RightThumbX, RightThumbY);
-	}
-	if (idsc->__isset.dgamepad == 1)
-	{
-		UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler dgamepad:%d"), idsc->__isset.dgamepad);
-	}
-	if (idsc->__isset.djoystick == 1)
-	{
-		UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler djoystick:%d"), idsc->__isset.djoystick);
-	}
-	if (idsc->__isset.dkeyboard == 1)
-	{
-		char key = idsc->dkeyboard.Key;
-		bool isPressed = idsc->dkeyboard.IsPressed;
-		bool isReleased = idsc->dkeyboard.IsReleased;
-
-		//UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler key:%d, isPressed:%d, isReleased:%d"), key, isPressed, isReleased);
-
-		//StartJump
-		if ( (Ruyi::SDK::GlobalInputDefine::Key::W == key || Ruyi::SDK::GlobalInputDefine::Key::Up == key) && isPressed)
-		{
-			OnStartJump();
-		}
-		//StopJump
-		if ((Ruyi::SDK::GlobalInputDefine::Key::W == key || Ruyi::SDK::GlobalInputDefine::Key::Up == key) && isReleased)
-		{
-			OnStopJump();
-		}
-		//OnStartSlide
-		if ( (Ruyi::SDK::GlobalInputDefine::Key::S == key || Ruyi::SDK::GlobalInputDefine::Key::Down == key) && isPressed )
-		{
-			OnStartSlide();
-		}
-		//OnStopSlide
-		if ((Ruyi::SDK::GlobalInputDefine::Key::S == key || Ruyi::SDK::GlobalInputDefine::Key::Down == key) && isReleased)
-		{
-			OnStopSlide();
-		}
-		//InputLeft
-		if ((Ruyi::SDK::GlobalInputDefine::Key::A == key || Ruyi::SDK::GlobalInputDefine::Key::Left == key) && isPressed)
-		{
-			InputLeft();
-		}
-		//InputRight
-		if ((Ruyi::SDK::GlobalInputDefine::Key::D == key || Ruyi::SDK::GlobalInputDefine::Key::Right == key) && isPressed)
-		{
-			InputRight();
-		}
-		//InputOK
-		if (Ruyi::SDK::GlobalInputDefine::Key::Return == key && isPressed)
-		{
-			InputOK();
-		}
-		//InGameMenu
-		if (Ruyi::SDK::GlobalInputDefine::Key::Escape == key && isPressed)
-		{
-			APlatformerPlayerController* MyPC = Cast<APlatformerPlayerController>(Controller);
-			if (MyPC) 
+			//StopJump
+			if ((Ruyi::SDK::GlobalInputDefine::Key::W == key.Key || Ruyi::SDK::GlobalInputDefine::Key::Up == key.Key) && (2 == key.NewValue))
 			{
-				MyPC->OnToggleInGameMenu();
+				OnStopJump();
 			}
-		}
-		//StartGame
-		if (Ruyi::SDK::GlobalInputDefine::Key::Return == key && isPressed)
-		{
-			//this one listened in blueprints
-			//So if you wanna call the input logic in blueprints but still get the input from Ruyi SDK
-			//We recommand you listener all the input in c++ from Ruyi SDK, then call in blueprints
-		}
-	}
-	if (idsc->__isset.dmouse == 1)
-	{
-		//UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler dmouse:%d"), idsc->__isset.dmouse);
-	} 
-	if (idsc->__isset.ruyicontroller == 1)
-	{
-		int64_t PacketId = idsc->ruyicontroller.PacketId;
-		int32_t ChannelId = idsc->ruyicontroller.ChannelId;
-		//FString fDeviceId = UTF8_TO_TCHAR(idsc->ruyicontroller.DeviceId.c_str());
-		int32_t KeyPress = idsc->ruyicontroller.KeyPress;
-		int8_t AnalogL2 = idsc->ruyicontroller.AnalogL2;
-		int8_t AnalogR2 = idsc->ruyicontroller.AnalogR2;
-		int8_t AnalogLeftJoyX = idsc->ruyicontroller.AnalogLeftJoyX;
-		int8_t AnalogLeftJoyY = idsc->ruyicontroller.AnalogLeftJoyY;
-		int8_t AnalogRightJoyX = idsc->ruyicontroller.AnalogRightJoyX;
-		int8_t AnalogRightJoyY = idsc->ruyicontroller.AnalogRightJoyY;
-		//tempoary, ruyi controller not support isPressd/isReleased
-		bool isPressed = true;
-		bool isReleased = false;
-		//StartJump
-		if ( Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonUp == KeyPress && isPressed)
-		{
-			OnStartJump();
-		}
-		//StopJump
-		if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonUp == KeyPress && isReleased)
-		{
-			OnStopJump();
-		}
-		//OnStartSlide
-		if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonDown == KeyPress  && isPressed)
-		{
-			OnStartSlide();
-		}
-		//OnStopSlide
-		if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonDown == KeyPress && isReleased)
-		{
-			OnStopSlide();
-		}
-		//InputLeft
-		if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonLeft == KeyPress && isPressed)
-		{
-			InputLeft();
-		}
-		//InputRight
-		if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonRight == KeyPress && isPressed)
-		{
-			InputRight();
-		}
-		//InputOK
-		if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonStart == KeyPress && isPressed)
-		{
-			InputOK();
-		}
-		//InGameMenu
-		if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonHome == KeyPress && isPressed)
-		{
-			APlatformerPlayerController* MyPC = Cast<APlatformerPlayerController>(Controller);
-			if (MyPC)
+			//OnStartSlide
+			if ((Ruyi::SDK::GlobalInputDefine::Key::S == key.Key || Ruyi::SDK::GlobalInputDefine::Key::Down == key.Key) && (1 == key.NewValue))
 			{
-				MyPC->OnToggleInGameMenu();
+				OnStartSlide();
 			}
-		}
-		UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler ruyicontroller PacketId:%d, ChannelId:%d"), PacketId, ChannelId);
-		UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler ruyicontroller KeyPress:%d, AnalogL2:%d, AnalogR2:%d"), KeyPress, AnalogL2, AnalogR2);
-		UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler ruyicontroller AnalogLeftJoyX:%d, AnalogLeftJoyY:%d, AnalogRightJoyX:%d, AnalogRightJoyY:%d"), AnalogLeftJoyX, AnalogLeftJoyY, AnalogRightJoyX, AnalogRightJoyY);
-	}
+			//OnStopSlide
+			if ((Ruyi::SDK::GlobalInputDefine::Key::S == key.Key || Ruyi::SDK::GlobalInputDefine::Key::Down == key.Key) && (2 == key.NewValue))
+			{
+				OnStopSlide();
+			}
+			//InputLeft
+			if ((Ruyi::SDK::GlobalInputDefine::Key::A == key.Key || Ruyi::SDK::GlobalInputDefine::Key::Left == key.Key) && (1 == key.NewValue))
+			{
+				InputLeft();
+			}
+			//InputRight
+			if ((Ruyi::SDK::GlobalInputDefine::Key::D == key.Key || Ruyi::SDK::GlobalInputDefine::Key::Right == key.Key) && (1 == key.NewValue))
+			{
+				InputRight();
+			}
+			//InputOK
+			if (Ruyi::SDK::GlobalInputDefine::Key::Return == key.Key && (1 == key.NewValue))
+			{
+				InputOK();
+			}
+			//InGameMenu
+			if (Ruyi::SDK::GlobalInputDefine::Key::Escape == key.Key && (1 == key.NewValue))
+			{
+				APlatformerPlayerController* MyPC = Cast<APlatformerPlayerController>(Controller);
+				if (MyPC)
+				{
+					MyPC->OnToggleInGameMenu();
+				}
+			}
+			//StartGame
+			if (Ruyi::SDK::GlobalInputDefine::Key::Return == key.Key && (1 == key.NewValue))
+			{
+				//this one listened in blueprints
+				//So if you wanna call the input logic in blueprints but still get the input from Ruyi SDK
+				//We recommand you listener all the input in c++ from Ruyi SDK, then call in blueprints
+			}
+		} 
+		else if (Ruyi::SDK::GlobalInputDefine::RuyiInputDeviceType::XB360 == key.DeviceType)
+		{
+			//StartJump
+			if ((Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::DPadUp == key.Key) && (1 == key.NewValue))
+			{
+				OnStartJump();
+			}
+			//StopJump
+			if ((Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::DPadUp == key.Key) && (2 == key.NewValue))
+			{
+				OnStopJump();
+			}
+			//OnStartSlide
+			if ((Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::DPadDown == key.Key) && (1 == key.NewValue))
+			{
+				OnStartSlide();
+			}
+			//OnStopSlide
+			if ((Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::DPadDown == key.Key) && (2 == key.NewValue))
+			{
+				OnStopSlide();
+			}
+			//InputLeft
+			if ((Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::DPadLeft == key.Key) && (1 == key.NewValue))
+			{
+				InputLeft();
+			}
+			//InputRight
+			if ((Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::DPadRight == key.Key) && (1 == key.NewValue))
+			{
+				InputRight();
+			}
+			//InputOK
+			if (Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::B == key.Key && (1 == key.NewValue))
+			{
+				InputOK();
+			}
+			//InGameMenu
+			if (Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::Start == key.Key && (1 == key.NewValue))
+			{
+				APlatformerPlayerController* MyPC = Cast<APlatformerPlayerController>(Controller);
+				if (MyPC)
+				{
+					MyPC->OnToggleInGameMenu();
+				}
+			}
+			//StartGame
+			if (Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::A == key.Key && (1 == key.NewValue))
+			{
+				//this one listened in blueprints
+				//So if you wanna call the input logic in blueprints but still get the input from Ruyi SDK
+				//We recommand you listener all the input in c++ from Ruyi SDK, then call in blueprints
+			}
 
-
-	//if (NULL == msg) return;
-
-	//FString deviceId = UTF8_TO_TCHAR(msg->->deviceId.c_str());
-	//FString name = UTF8_TO_TCHAR(idsc->name.c_str());
-	
-	//UE_LOG(LogPlatformer, Log, TEXT("InputActionTriggered deviceId:%s name:%s"), *deviceId, *name);
-	//UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler EESSSSS"));
+		} 
+		else if (Ruyi::SDK::GlobalInputDefine::RuyiInputDeviceType::RuyiController == key.DeviceType)
+		{
+			//StartJump
+			if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonUp == key.Key && (1 == key.NewValue))
+			{
+				OnStartJump();
+			}
+			//StopJump
+			if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonUp == key.Key && (2 == key.NewValue))
+			{
+				OnStopJump();
+			}
+			//OnStartSlide
+			if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonDown == key.Key  && (1 == key.NewValue))
+			{
+				OnStartSlide();
+			}
+			//OnStopSlide
+			if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonDown == key.Key && (2 == key.NewValue))
+			{
+				OnStopSlide();
+			}
+			//InputLeft
+			if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonLeft == key.Key && (1 == key.NewValue))
+			{
+				InputLeft();
+			}
+			//InputRight
+			if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonRight == key.Key && (1 == key.NewValue))
+			{
+				InputRight();
+			}
+			//InputOK
+			if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonStart == key.Key && (1 == key.NewValue))
+			{
+				InputOK();
+			}
+			//InGameMenu
+			if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonHome == key.Key && (1 == key.NewValue))
+			{
+				APlatformerPlayerController* MyPC = Cast<APlatformerPlayerController>(Controller);
+				if (MyPC)
+				{
+					MyPC->OnToggleInGameMenu();
+				}
+			}
+		} else {}
+	});
 }
 
 void APlatformerCharacter::InputConnectionChangeHandler(std::string topic, apache::thrift::TBase* msg)
