@@ -59,7 +59,11 @@ void APlatformerCharacter::InputStateChangeHandler(std::string topic, apache::th
 	//DeviceType: to identify your input device
 	//Key: the key of your input device
 	//NewValue/OldValue:  could be three value:0,1,2.  1 means press Down 2 means release 0 not define yet
-	//NewValue is the current key state, if your press down, NewValue will be 1, when you release, NewValue will be 2, OldValue will be 1
+	//NewValue is the current key state, if your press down, NewValue will be 1, when you release, NewValue will be 2, OldValue will be 1	
+	//action:the Key value of config file.
+
+	//you can just judge the input by "action" value of Triggers structure. The value of "action" can be modified
+	//in system config file of the game package.
 	int triggerNumber = idsc->Triggers.size();
 
 	UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler userId:%s action:%s triggers Num:%d"), *fUserId, *fAction, triggerNumber);
@@ -67,6 +71,44 @@ void APlatformerCharacter::InputStateChangeHandler(std::string topic, apache::th
 	{
 		UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler deviceType:%d, key:%d, newValue:%d, oldValue:%d"), key.DeviceType, key.Key, key.NewValue, key.OldValue);
 
+		if ((1 == key.NewValue) && (0 == idsc->action.compare("GamePad_Up")))
+		{
+			OnStartJump();
+		}
+		if ((2 == key.NewValue) && (0 == idsc->action.compare("GamePad_Up")))
+		{
+			OnStopJump();
+		}
+
+		if ((1 == key.NewValue) && (0 == idsc->action.compare("GamePad_Down")))
+		{
+			OnStartSlide();
+		}
+		if ((2 == key.NewValue) && (0 == idsc->action.compare("GamePad_Down")))
+		{
+			OnStopSlide();
+		}
+
+		if ((1 == key.NewValue) && (0 == idsc->action.compare("GamePad_Left")))
+		{
+			InputLeft();
+		}
+		
+		if ((1 == key.NewValue) && (0 == idsc->action.compare("GamePad_Right")))
+		{
+			InputRight();
+		}
+
+		if ((1 == key.NewValue) && (0 == idsc->action.compare("GamePad_X")))
+		{
+			APlatformerPlayerController* MyPC = Cast<APlatformerPlayerController>(Controller);
+			if (MyPC)
+			{
+				MyPC->OnToggleInGameMenu();
+			}
+		}
+
+		/*
 		if (Ruyi::SDK::GlobalInputDefine::RuyiInputDeviceType::Keyboard == key.DeviceType)
 		{
 			//StartJump
@@ -179,7 +221,7 @@ void APlatformerCharacter::InputStateChangeHandler(std::string topic, apache::th
 		else if (Ruyi::SDK::GlobalInputDefine::RuyiInputDeviceType::RuyiController == key.DeviceType)
 		{
 			//StartJump
-			if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonUp == key.Key && (1 == key.NewValue))
+			//if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonUp == key.Key && (1 == key.NewValue))
 			{
 				OnStartJump();
 			}
@@ -223,6 +265,7 @@ void APlatformerCharacter::InputStateChangeHandler(std::string topic, apache::th
 				}
 			}
 		} else {}
+		*/
 	});
 }
 
