@@ -62,8 +62,31 @@ void APlatformerCharacter::InputStateChangeHandler(std::string topic, apache::th
 	//NewValue is the current key state, if your press down, NewValue will be 1, when you release, NewValue will be 2, OldValue will be 1	
 	//action:the Key value of config file.
 
-	//you can just judge the input by "action" value of Triggers structure. The value of "action" can be modified
-	//in system config file of the game package.
+	//you can judge the input key by "action" value of Triggers structure. The value of "action" can be modified
+	//in config file of the game package. Now I just hard-core in code. We'll try to optimise this part
+	//in future release
+	//all default system action value: (Layer0/RuyiLocalRoot/Resources/configs/UserSetting)
+	//GamePad_LB
+	//GamePad_LT
+	//GamePad_L3
+	//GamePad_RB
+	//GamePad_RT
+	//GamePad_R3
+	//GamePad_UP
+	//GamePad_Down
+	//GamePad_Left
+	//GamePad_Down
+	//GamePad_Home
+	//GamePad_Back
+	//GamePad_Start
+	//GamePad_X
+	//GamePad_Y
+	//GamePad_A
+	//GamePad_B
+	//GamePad_LJoyX
+	//GamePad_LJoyY
+	//GamePad_RJoyX
+	//GamePad_RJoyY
 	int triggerNumber = idsc->Triggers.size();
 
 	UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler userId:%s action:%s triggers Num:%d"), *fUserId, *fAction, triggerNumber);
