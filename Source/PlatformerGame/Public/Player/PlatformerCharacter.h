@@ -15,6 +15,8 @@ class APlatformerCharacter : public ACharacter
 
 public:
 	
+	virtual void BeginPlay() override;
+
 	/** player pawn initialization */
 	virtual void PostInitializeComponents() override;
 
@@ -182,5 +184,8 @@ private:
 
 	/** Input OK event */
 	void InputOK();
+
+	float moveXAxis;
+	float moveYAxis;
 };
 

@@ -20,6 +20,10 @@ public class PlatformerGame : ModuleRules
         bUseRTTI = true;
         bEnableExceptions = true;
 
+        //PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+
+        Definitions.Add("BOOST_ALL_NO_LIB");
+
         PublicDependencyModuleNames.AddRange(
 			new string[] {
 				"Core",
@@ -53,7 +57,7 @@ public class PlatformerGame : ModuleRules
             new string[] 
             {
                 "PlatformerGame/RuyiSDK/include",
-                "RuyiSDKDemo/include/Generated/CommonType",
+                "PlatformerGame/RuyiSDK/include/Generated/CommonType",
 				// ... add public include paths required here ...
 			}
             );

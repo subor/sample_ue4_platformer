@@ -232,6 +232,8 @@ void UPlatformerBlueprintLibrary::ShowWaitingPanel(class UObject* WorldContextOb
 	}
 }
 
+#pragma region Ruyi SDK related
+
 void UPlatformerBlueprintLibrary::RuyiSDKMangerSetHUD(class UObject* WorldContextObject, APlatformerHUD* HUD)
 {
 	FRuyiSDKManager::Instance()->MainHUD = HUD;
@@ -252,3 +254,34 @@ void UPlatformerBlueprintLibrary::RuyiSDKGetLeadboardPage(class UObject* WorldCo
 {
 	FRuyiSDKManager::Instance()->StartRuyiSDKGetLeadboardPage((Ruyi::SDK::BrainCloudApi::SortOrder::type)sortType, startIndex, endIndex);
 }
+
+void UPlatformerBlueprintLibrary::RuyiSDKFriendList() 
+{
+	FRuyiSDKManager::Instance()->StartRuyiSDKListFriends();
+}
+
+void UPlatformerBlueprintLibrary::RuyiSDKGetPartyInfo()
+{
+	FRuyiSDKManager::Instance()->StartRuyiSDKGetPartyInfo();
+}
+
+void UPlatformerBlueprintLibrary::RuyiSDKStartTelemetrySession() 
+{
+	FRuyiSDKManager::Instance()->StartRuyiSDKStartTelemetrySession();
+}
+
+void UPlatformerBlueprintLibrary::RuyiSDKUpdateVideo(class UObject* WorldContextObject, FString cloudFileName, FString localFilePath)
+{
+	FRuyiSDKManager::Instance()->StartRuyiSDKUpdateVideo(cloudFileName, localFilePath);
+}
+
+void UPlatformerBlueprintLibrary::RuyiSDKDownloadVideo(class UObject* WorldContextObject, FString cloudFileName)
+{
+	FRuyiSDKManager::Instance()->StartRuyiSDKDownloadVideo(cloudFileName);
+}
+
+void UPlatformerBlueprintLibrary::RuyiSDKAwardAchievement(class UObject* WorldContextObject, int score)
+{
+	FRuyiSDKManager::Instance()->StartRuyiSDKAwardAchievement(score);
+}
+#pragma endregion

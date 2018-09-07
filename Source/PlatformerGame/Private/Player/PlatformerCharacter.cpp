@@ -15,6 +15,26 @@ APlatformerCharacter::APlatformerCharacter(const FObjectInitializer& ObjectIniti
 	GetMesh()->MeshComponentUpdateFlag = EMeshComponentUpdateFlag::AlwaysTickPoseAndRefreshBones;
 }
 
+void APlatformerCharacter::BeginPlay() 
+{
+	Super::BeginPlay();
+
+	UE_LOG(LogPlatformer, Log, TEXT("APlatformerCharacter::BeginPlay() !!!"));
+
+	if (FRuyiSDKManager::Instance()->IsSDKReady())
+	{
+		UE_LOG(LogPlatformer, Log, TEXT("APlatformerCharacter::PostInitializeComponents Subscribe !!!"));
+
+		//FRuyiSDKManager::Instance()->SDK()->Subscriber->Subscribe("service/inputmanager_internal");
+		//FRuyiSDKManager::Instance()->SDK()->Subscriber->Subscribe("service/inputmgr_int");
+		//FRuyiSDKManager::Instance()->SDK()->Subscriber->AddMessageHandler(this, &APlatformerCharacter::InputStateChangeHandler);
+	}
+	else
+	{
+		UE_LOG(LogPlatformer, Log, TEXT("APlatformerCharacter::PostInitializeComponents sdk not ready !!!"));
+	}
+}
+
 void APlatformerCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
@@ -22,274 +42,93 @@ void APlatformerCharacter::PostInitializeComponents()
 	// setting initial rotation
 	SetActorRotation(FRotator(0.0f, 0.0f, 0.0f));
 	UE_LOG(LogPlatformer, Log, TEXT("APlatformerCharacter::PostInitializeComponents PostInitializeComponents !!!"));
-
-	if (FRuyiSDKManager::Instance()->IsSDKReady())
-	{
-		UE_LOG(LogPlatformer, Log, TEXT("APlatformerCharacter::PostInitializeComponents Subscribe !!!"));
-		
-		//FRuyiSDKManager::Instance()->SDK()->Subscriber->Subscribe("service/inputmanager_internal");
-		FRuyiSDKManager::Instance()->SDK()->Subscriber->Subscribe("service/user_service_external");
-		FRuyiSDKManager::Instance()->SDK()->Subscriber->AddMessageHandler(this, &APlatformerCharacter::InputStateChangeHandler);
-	} else 
-	{
-		UE_LOG(LogPlatformer, Log, TEXT("APlatformerCharacter::PostInitializeComponents sdk not ready !!!"));
-	}
 }
 
 void APlatformerCharacter::InputStateChangeHandler(std::string topic, apache::thrift::TBase* msg)
 {
 	FString fTopic = UTF8_TO_TCHAR(topic.c_str());
-	//UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler DDDDDDDDDDDDDD topic:%s"), *fTopic);
 
-	//auto idsc = dynamic_cast<Ruyi::SDK::InputManager::InputActionTriggered*>(msg);
-	//auto idsc = dynamic_cast<Ruyi::SDK::InputManager::InputDeviceStateChanged*>(msg);
-	auto idsc = dynamic_cast<Ruyi::SDK::UserServiceExternal::InputActionEvent*>(msg);
-	
+	auto idsc = dynamic_cast<Ruyi::SDK::InputManager::RuyiGamePadInput*>(msg);
+
 	if (idsc == NULL) 
 	{
 		return;
 	}
 	
-	//userId is the id of the current logged account
-	FString fUserId = UTF8_TO_TCHAR(idsc->userId.c_str());
-	FString fAction = UTF8_TO_TCHAR(idsc->action.c_str());
+	//note, joystick will call constantly while pushing it, so as the button event while pressing buttons and pushing joystick
+	//please do the proper filter logic if needed
 
-	//std::vector<TriggerKeys>  Triggers is the numbers of current input from any device
-	//TriggerKeys 
-	//DeviceType: to identify your input device
-	//Key: the key of your input device
-	//NewValue/OldValue:  could be three value:0,1,2.  1 means press Down 2 means release 0 not define yet
-	//NewValue is the current key state, if your press down, NewValue will be 1, when you release, NewValue will be 2, OldValue will be 1	
-	//action:the Key value of config file.
+	float leftThumbX = idsc->LeftThumbX * 1.0f / powf(2.0f, 15);
+	float leftThumbY = idsc->LeftThumbY * 1.0f / powf(2.0f, 15);
 
-	//you can judge the input key by "action" value of Triggers structure. The value of "action" can be modified
-	//in config file of the game package. Now I just hard-core in code. We'll try to optimise this part
-	//in future release
-	//all default system action value: (Layer0/RuyiLocalRoot/Resources/configs/UserSetting)
-	//GamePad_LB
-	//GamePad_LT
-	//GamePad_L3
-	//GamePad_RB
-	//GamePad_RT
-	//GamePad_R3
-	//GamePad_UP
-	//GamePad_Down
-	//GamePad_Left
-	//GamePad_Down
-	//GamePad_Home
-	//GamePad_Back
-	//GamePad_Start
-	//GamePad_X
-	//GamePad_Y
-	//GamePad_A
-	//GamePad_B
-	//GamePad_LJoyX
-	//GamePad_LJoyY
-	//GamePad_RJoyX
-	//GamePad_RJoyY
-	int triggerNumber = idsc->Triggers.size();
-
-	UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler userId:%s action:%s triggers Num:%d"), *fUserId, *fAction, triggerNumber);
-	std::for_each(idsc->Triggers.begin(), idsc->Triggers.end(), [&](Ruyi::SDK::UserServiceExternal::TriggerKeys& key) 
+	if (0 == idsc->ButtonFlags)
 	{
-		UE_LOG(LogPlatformer, Log, TEXT("InputStateChangeHandler deviceType:%d, key:%d, newValue:%d, oldValue:%d"), key.DeviceType, key.Key, key.NewValue, key.OldValue);
+		moveXAxis = 0;
+		moveYAxis = 0;
+	}
 
-		if ((1 == key.NewValue) && (0 == idsc->action.compare("GamePad_Up")))
-		{
-			OnStartJump();
-		}
-		if ((2 == key.NewValue) && (0 == idsc->action.compare("GamePad_Up")))
-		{
-			OnStopJump();
-		}
+	//if (abs(leftThumbX) <= 0.1f)
+	if (leftThumbX >= -0.1f && leftThumbX <= 0.1f)
+	{
+		moveXAxis = 0;
+	}
 
-		if ((1 == key.NewValue) && (0 == idsc->action.compare("GamePad_Down")))
-		{
-			OnStartSlide();
-		}
-		if ((2 == key.NewValue) && (0 == idsc->action.compare("GamePad_Down")))
-		{
-			OnStopSlide();
-		}
+	//if (abs(leftThumbY) <= 0.1f)
+	if (leftThumbY >= -0.1f && leftThumbY <= 0.1f)
+	{
+		moveYAxis = 0;
+	}
 
-		if ((1 == key.NewValue) && (0 == idsc->action.compare("GamePad_Left")))
-		{
-			InputLeft();
-		}
-		
-		if ((1 == key.NewValue) && (0 == idsc->action.compare("GamePad_Right")))
-		{
-			InputRight();
-		}
+	if (leftThumbX >= 0.5f)
+	{
+		moveXAxis = 1;
+	}
+	if (leftThumbX <= -0.5f)
+	{
+		moveXAxis = -1;
+	}
 
-		if ((1 == key.NewValue) && (0 == idsc->action.compare("GamePad_X")))
+	if (leftThumbY >= 0.5f)
+	{
+		moveYAxis = 1;
+	}
+	if (leftThumbY <= -0.5f)
+	{
+		moveYAxis = -1;
+	}
+	if (Ruyi::SDK::CommonType::RuyiGamePadButtonFlags::GamePad_Up == idsc->ButtonFlags)
+	{
+		OnStartJump();
+	}
+
+	if (Ruyi::SDK::CommonType::RuyiGamePadButtonFlags::GamePad_Down == idsc->ButtonFlags)
+	{
+		OnStartSlide();
+	}
+
+	if (Ruyi::SDK::CommonType::RuyiGamePadButtonFlags::GamePad_Left == idsc->ButtonFlags)
+	{
+		InputLeft();
+	}
+
+	if (Ruyi::SDK::CommonType::RuyiGamePadButtonFlags::GamePad_Right == idsc->ButtonFlags)
+	{
+		InputRight();
+	}
+
+	if (Ruyi::SDK::CommonType::RuyiGamePadButtonFlags::GamePad_X == idsc->ButtonFlags)
+	{
+		APlatformerPlayerController* MyPC = Cast<APlatformerPlayerController>(Controller);
+		if (MyPC)
 		{
-			APlatformerPlayerController* MyPC = Cast<APlatformerPlayerController>(Controller);
-			if (MyPC)
-			{
-				MyPC->OnToggleInGameMenu();
-			}
+			MyPC->OnToggleInGameMenu();
 		}
+	}
 
-		/*
-		if (Ruyi::SDK::GlobalInputDefine::RuyiInputDeviceType::Keyboard == key.DeviceType)
-		{
-			//StartJump
-			if ((Ruyi::SDK::GlobalInputDefine::Key::W == key.Key || Ruyi::SDK::GlobalInputDefine::Key::Up == key.Key) && (1 == key.NewValue))
-			{
-				OnStartJump();
-			}
-			//StopJump
-			if ((Ruyi::SDK::GlobalInputDefine::Key::W == key.Key || Ruyi::SDK::GlobalInputDefine::Key::Up == key.Key) && (2 == key.NewValue))
-			{
-				OnStopJump();
-			}
-			//OnStartSlide
-			if ((Ruyi::SDK::GlobalInputDefine::Key::S == key.Key || Ruyi::SDK::GlobalInputDefine::Key::Down == key.Key) && (1 == key.NewValue))
-			{
-				OnStartSlide();
-			}
-			//OnStopSlide
-			if ((Ruyi::SDK::GlobalInputDefine::Key::S == key.Key || Ruyi::SDK::GlobalInputDefine::Key::Down == key.Key) && (2 == key.NewValue))
-			{
-				OnStopSlide();
-			}
-			//InputLeft
-			if ((Ruyi::SDK::GlobalInputDefine::Key::A == key.Key || Ruyi::SDK::GlobalInputDefine::Key::Left == key.Key) && (1 == key.NewValue))
-			{
-				InputLeft();
-			}
-			//InputRight
-			if ((Ruyi::SDK::GlobalInputDefine::Key::D == key.Key || Ruyi::SDK::GlobalInputDefine::Key::Right == key.Key) && (1 == key.NewValue))
-			{
-				InputRight();
-			}
-			//InputOK
-			if (Ruyi::SDK::GlobalInputDefine::Key::Return == key.Key && (1 == key.NewValue))
-			{
-				InputOK();
-			}
-			//InGameMenu
-			if (Ruyi::SDK::GlobalInputDefine::Key::Escape == key.Key && (1 == key.NewValue))
-			{
-				APlatformerPlayerController* MyPC = Cast<APlatformerPlayerController>(Controller);
-				if (MyPC)
-				{
-					MyPC->OnToggleInGameMenu();
-				}
-			}
-			//StartGame
-			if (Ruyi::SDK::GlobalInputDefine::Key::Return == key.Key && (1 == key.NewValue))
-			{
-				//this one listened in blueprints
-				//So if you wanna call the input logic in blueprints but still get the input from Ruyi SDK
-				//We recommand you listener all the input in c++ from Ruyi SDK, then call in blueprints
-			}
-		} 
-		else if (Ruyi::SDK::GlobalInputDefine::RuyiInputDeviceType::XB360 == key.DeviceType)
-		{
-			//StartJump
-			if ((Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::DPadUp == key.Key) && (1 == key.NewValue))
-			{
-				OnStartJump();
-			}
-			//StopJump
-			if ((Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::DPadUp == key.Key) && (2 == key.NewValue))
-			{
-				OnStopJump();
-			}
-			//OnStartSlide
-			if ((Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::DPadDown == key.Key) && (1 == key.NewValue))
-			{
-				OnStartSlide();
-			}
-			//OnStopSlide
-			if ((Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::DPadDown == key.Key) && (2 == key.NewValue))
-			{
-				OnStopSlide();
-			}
-			//InputLeft
-			if ((Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::DPadLeft == key.Key) && (1 == key.NewValue))
-			{
-				InputLeft();
-			}
-			//InputRight
-			if ((Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::DPadRight == key.Key) && (1 == key.NewValue))
-			{
-				InputRight();
-			}
-			//InputOK
-			if (Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::B == key.Key && (1 == key.NewValue))
-			{
-				InputOK();
-			}
-			//InGameMenu
-			if (Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::Start == key.Key && (1 == key.NewValue))
-			{
-				APlatformerPlayerController* MyPC = Cast<APlatformerPlayerController>(Controller);
-				if (MyPC)
-				{
-					MyPC->OnToggleInGameMenu();
-				}
-			}
-			//StartGame
-			if (Ruyi::SDK::GlobalInputDefine::GamepadButtonFlags::A == key.Key && (1 == key.NewValue))
-			{
-				//this one listened in blueprints
-				//So if you wanna call the input logic in blueprints but still get the input from Ruyi SDK
-				//We recommand you listener all the input in c++ from Ruyi SDK, then call in blueprints
-			}
-
-		} 
-		else if (Ruyi::SDK::GlobalInputDefine::RuyiInputDeviceType::RuyiController == key.DeviceType)
-		{
-			//StartJump
-			//if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonUp == key.Key && (1 == key.NewValue))
-			{
-				OnStartJump();
-			}
-			//StopJump
-			if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonUp == key.Key && (2 == key.NewValue))
-			{
-				OnStopJump();
-			}
-			//OnStartSlide
-			if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonDown == key.Key  && (1 == key.NewValue))
-			{
-				OnStartSlide();
-			}
-			//OnStopSlide
-			if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonDown == key.Key && (2 == key.NewValue))
-			{
-				OnStopSlide();
-			}
-			//InputLeft
-			if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonLeft == key.Key && (1 == key.NewValue))
-			{
-				InputLeft();
-			}
-			//InputRight
-			if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonRight == key.Key && (1 == key.NewValue))
-			{
-				InputRight();
-			}
-			//InputOK
-			if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonStart == key.Key && (1 == key.NewValue))
-			{
-				InputOK();
-			}
-			//InGameMenu
-			if (Ruyi::SDK::GlobalInputDefine::RuyiControllerKey::eButtonHome == key.Key && (1 == key.NewValue))
-			{
-				APlatformerPlayerController* MyPC = Cast<APlatformerPlayerController>(Controller);
-				if (MyPC)
-				{
-					MyPC->OnToggleInGameMenu();
-				}
-			}
-		} else {}
-		*/
-	});
+	if ((Ruyi::SDK::CommonType::RuyiGamePadButtonFlags::GamePad_X | Ruyi::SDK::CommonType::RuyiGamePadButtonFlags::GamePad_A) == idsc->ButtonFlags)
+	{
+	
+	}
 }
 
 void APlatformerCharacter::InputConnectionChangeHandler(std::string topic, apache::thrift::TBase* msg)
@@ -303,7 +142,7 @@ void APlatformerCharacter::InputConnectionChangeHandler(std::string topic, apach
 void APlatformerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	//you can use UE4 engine input system, or you can use input system from sdk.
-	return;
+	//return;
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &APlatformerCharacter::OnStartJump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &APlatformerCharacter::OnStopJump);
 	PlayerInputComponent->BindAction("Slide", IE_Pressed, this, &APlatformerCharacter::OnStartSlide);
