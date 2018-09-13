@@ -284,4 +284,10 @@ void UPlatformerBlueprintLibrary::RuyiSDKAwardAchievement(class UObject* WorldCo
 {
 	FRuyiSDKManager::Instance()->StartRuyiSDKAwardAchievement(score);
 }
+
+void UPlatformerBlueprintLibrary::RuyiSDKTakeScreenShot() 
+{
+	FRuyiSDKManager::Instance()->StartRuyiSDKTakeScreenShot();
+}
+
 #pragma endregion

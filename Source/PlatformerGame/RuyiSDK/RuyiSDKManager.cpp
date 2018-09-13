@@ -558,6 +558,46 @@ void FRuyiSDKManager::RuyiSDKAsyncAwardAchievement()
 			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("AwardAchievement exception !!!"));
 		}
 	}
+
+	EndThread();
+}
+
+void FRuyiSDKManager::StartRuyiSDKTakeScreenShot() 
+{
+	if (!m_IsSDKReady) return;
+
+	MainHUD->ShowWaitingPanel(true);
+
+	m_RuyiSDKRequestType = RuyiSDKRequestType::RuyiSDKTakeScreenShot;
+
+	StartThread();
+}
+
+void FRuyiSDKManager::RuyiSDKAsyncTakeScreenShot()
+{
+	try 
+	{
+		bool result = m_RuyiSDK->OverlayService->TakeScreenShot();
+
+		if (GEngine)
+		{
+			if (result)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Screen Shot return true !!!"));
+			} else 
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Screen Shot return false !!!"));
+			}
+		}
+	} catch(std::exception e)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Screen Shot !!!"));
+		}
+	}
+
+	EndThread();
 }
 
 #pragma endregion
@@ -628,6 +668,9 @@ uint32 FRuyiSDKManager::Run()
 				break;
 			case RuyiSDKRequestType::RuyiSDKAwardAchievement:
 				RuyiSDKAsyncAwardAchievement();
+				break;
+			case RuyiSDKRequestType::RuyiSDKTakeScreenShot:
+				RuyiSDKAsyncTakeScreenShot();
 				break;
 			default:break;
 			}

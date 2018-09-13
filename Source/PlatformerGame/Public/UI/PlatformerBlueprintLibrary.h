@@ -113,5 +113,8 @@ class UPlatformerBlueprintLibrary : public UBlueprintFunctionLibrary
 
 	UFUNCTION(BlueprintCallable, Category = HUD, meta = (WorldContext = "WorldContextObject"))
 	static void RuyiSDKAwardAchievement(class UObject* WorldContextObject, int score);
+
+	UFUNCTION(BlueprintCallable, Category = HUD, meta = (WorldContext = "WorldContextObject"))
+	static void RuyiSDKTakeScreenShot();
 #pragma endregion 
 };

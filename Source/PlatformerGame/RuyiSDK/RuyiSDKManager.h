@@ -35,6 +35,7 @@ enum class RuyiSDKRequestType : uint8
 	RuyiSDKUpdateVideo,
 	RuyiSDKDownloadVideo,
 	RuyiSDKAwardAchievement,
+	RuyiSDKTakeScreenShot,
 };
 
 using namespace Ruyi;
@@ -79,6 +80,9 @@ public:
 
 	void StartRuyiSDKAwardAchievement(int score);
 	void RuyiSDKAsyncAwardAchievement();
+
+	void StartRuyiSDKTakeScreenShot();
+	void RuyiSDKAsyncTakeScreenShot();
 #pragma endregion
 
 #pragma region Ruyi SDK Data 
