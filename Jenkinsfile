@@ -40,7 +40,7 @@ pipeline {
 		//Unreal Demo Root
 		DEMO_PROJECT_ROOT = "sample_ue4_platformer"
 		//DEMO SDK CPP folder
-		DEMO_SDKCPP_ROOT = "${DEMO_PROJECT_ROOT}\\Source\\PlatformerGame"
+		DEMO_SDKCPP_ROOT = "${DEMO_PROJECT_ROOT}\\Source\\PlatformerGame\\RuyiSDK"
 		//Unreal packed target
 		COOKED_ROOT = "${DEMO_PROJECT_ROOT}/Pack"
 		//Archive root
