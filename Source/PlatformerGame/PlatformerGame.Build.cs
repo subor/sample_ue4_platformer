@@ -53,7 +53,7 @@ public class PlatformerGame : ModuleRules
             new string[] 
             {
                 "PlatformerGame/RuyiSDK/include",
-                "RuyiSDKDemo/include/Generated/CommonType",
+                "PlatformerGame/RuyiSDK/include/Generated/CommonType",
 				// ... add public include paths required here ...
 			}
             );
