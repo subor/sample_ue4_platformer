@@ -1,0 +1,12 @@
+{
+  "i18n": {
+    "en-US": {
+      "com.ruyi.PlatformerGame": "BladeRunner",
+      "antestapp": "This is a test app from Unreal intergrated with Ruyi SDK"
+    },
+    "zh-CN": {
+      "com.ruyi.PlatformerGame": "刀锋逃亡",
+      "antestapp": "来自Unreal的Demo游戏，测试集成Ruyi SDK"
+    }
+  }
+}

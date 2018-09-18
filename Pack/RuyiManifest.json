@@ -1,0 +1,27 @@
+{
+	appID: "com.ruyi.jade.PlatformerGame",
+	application:	{
+		name:"@com.ruyi.PlatformerGame",
+		label:"@antestapp",
+		icon:"bluetooth.png",
+		description:"@antestapp",
+		logo:"logo.png",
+		activity:[
+			{
+				name:"main",
+				exePath:"PlatformerGame/PlatformerGame.exe",
+				label:"main test activity",
+				description:"@antestapp",
+				icon:"logo.png"
+			}
+		]
+	},
+	use_permissions:[
+		{
+			name:"jade.permission.ACHIEVEMENT"
+		}
+	],
+	use_sdk:{
+		minSdkVersion : "1.0.0.0"
+	}
+}

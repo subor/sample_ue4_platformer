@@ -42,7 +42,7 @@ pipeline {
 		//DEMO SDK CPP folder
 		DEMO_SDKCPP_ROOT = "${DEMO_PROJECT_ROOT}\\Source\\PlatformerGame\\RuyiSDK"
 		//Unreal packed target
-		COOKED_ROOT = "${DEMO_PROJECT_ROOT}/Pack"
+		COOKED_ROOT = "${DEMO_PROJECT_ROOT}\\Pack"
 		//Archive root
 		ARCHIVE_ROOT = 'archives'
 		//File path for saving commit id
