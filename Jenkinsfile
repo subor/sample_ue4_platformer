@@ -150,6 +150,7 @@ pipeline {
 				bat """
 					chcp ${WIN_CMD_ENCODING}
 					del ${DEMO_PROJECT_ROOT}\\Pack.zip /F /Q
+					xcopy ${RUYI_SDK_CPP}\\lib\\zmq\\libzmq.dll ${DEMO_PROJECT_ROOT.replaceAll('/','\\\\')}\\Binaries\\Win64 /i /y
 					"${UE_ROOT}/Build/BatchFiles/RunUAT.bat" BuildCookRun -project="${workspace}/${DEMO_PROJECT_ROOT}/PlatformerGame.uproject" -noP4 -platform=Win64 -clientconfig=Development -serverconfig=Development -cook -maps=AllMaps --NoCompile -stage -pak -archive -archivedirectory="${workspace}/${COOKED_ROOT}"
 				"""
 				
