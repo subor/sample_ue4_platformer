@@ -185,6 +185,9 @@ private:
 	/** Input OK event */
 	void InputOK();
 
+	bool isJump;
+	bool isSlide;
+
 	float moveXAxis;
 	float moveYAxis;
 };

@@ -59,7 +59,11 @@ APlatformerHUD::APlatformerHUD(const FObjectInitializer& ObjectInitializer) : Su
 
 	IsReady = false;
 	bDrawProfile = true;
+	bDrawAchievement = false;
+
 	RuyiUserProfile = TEXT("Off-Line");
+	RuyiAchievement = TEXT("");
+	RuyiAwardedAchievements = TEXT("");
 }
 
 void APlatformerHUD::NotifyHitBoxClick(FName BoxName)
@@ -319,6 +323,56 @@ void APlatformerHUD::DrawLeadboard()
 
 }
 
+void APlatformerHUD::DrawAchievement()
+{
+	const FText profile = FText::FromString(RuyiAchievement);
+	//const FText profile = FText::Format(LOCTEXT("Title", "%s"), RuyiUserProfile);
+	const float SizeX = Canvas->ClipX * 0.2f;
+	const float SizeY = 1000 * UIScale * 0.25f;
+	const float DrawX = (Canvas->ClipX - SizeX) * 0;
+	const float DrawY = (Canvas->ClipY - SizeY) * 0.2;
+
+	DrawBorder(DrawX, DrawY, SizeX, SizeY, 1.0f, BlueBorder);
+
+	const float TextScale = 1.2f;
+	const float TextMargin = 0.02f;
+	float StrSizeX, StrSizeY;
+	Canvas->StrLen(HUDFont, profile.ToString(), StrSizeX, StrSizeY);
+	StrSizeX = StrSizeX * TextScale * UIScale;
+	StrSizeY = StrSizeY * TextScale * UIScale;
+
+	FCanvasTextItem TextItem(FVector2D(DrawX, DrawY),
+		profile, HUDFont, FLinearColor::White);
+	TextItem.Scale = FVector2D(TextScale * UIScale * 0.5, TextScale * UIScale * 0.5);
+	TextItem.EnableShadow(FLinearColor::Transparent);
+	Canvas->DrawItem(TextItem);
+}
+
+void APlatformerHUD::DrawAwardedAchievements() 
+{
+	const FText profile = FText::FromString(RuyiAwardedAchievements);
+	const float SizeX = Canvas->ClipX * 0;
+	const float SizeY = 1000 * UIScale * 0.5f;
+	const float DrawX = (Canvas->ClipX - SizeX) * 0.8;
+	const float DrawY = (Canvas->ClipY - SizeY) * 0.2;
+
+	DrawBorder(DrawX, DrawY, SizeX, SizeY, 1.0f, BlueBorder);
+
+	const float TextScale = 1.2f;
+	const float TextMargin = 0.02f;
+	float StrSizeX, StrSizeY;
+	Canvas->StrLen(HUDFont, profile.ToString(), StrSizeX, StrSizeY);
+	StrSizeX = StrSizeX * TextScale * UIScale;
+	StrSizeY = StrSizeY * TextScale * UIScale;
+
+	FCanvasTextItem TextItem(FVector2D(DrawX, DrawY),
+		profile, HUDFont, FLinearColor::White);
+	TextItem.Scale = FVector2D(TextScale * UIScale * 0.5, TextScale * UIScale * 0.5);
+	TextItem.EnableShadow(FLinearColor::Transparent);
+	Canvas->DrawItem(TextItem);
+}
+
+
 void APlatformerHUD::DrawHUD()
 {
 	if ( GEngine && GEngine->GameViewport )
@@ -430,6 +484,14 @@ void APlatformerHUD::DrawHUD()
 		if (bDrawLeadBoard)
 		{
 			DrawLeadboard();
+		}
+		if (bDrawAchievement)
+		{
+			DrawAchievement();
+		}
+		if (bDrawAwardedAchievements)
+		{
+			DrawAwardedAchievements();
 		}
 	}
 }

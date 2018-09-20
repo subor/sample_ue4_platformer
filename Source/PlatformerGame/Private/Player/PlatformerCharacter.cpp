@@ -13,6 +13,9 @@ APlatformerCharacter::APlatformerCharacter(const FObjectInitializer& ObjectIniti
 {
 	MinSpeedForHittingWall = 200.0f;
 	GetMesh()->MeshComponentUpdateFlag = EMeshComponentUpdateFlag::AlwaysTickPoseAndRefreshBones;
+
+	isJump = false;
+	isSlide = false;
 }
 
 void APlatformerCharacter::BeginPlay() 
@@ -25,9 +28,8 @@ void APlatformerCharacter::BeginPlay()
 	{
 		UE_LOG(LogPlatformer, Log, TEXT("APlatformerCharacter::PostInitializeComponents Subscribe !!!"));
 
-		//FRuyiSDKManager::Instance()->SDK()->Subscriber->Subscribe("service/inputmanager_internal");
-		//FRuyiSDKManager::Instance()->SDK()->Subscriber->Subscribe("service/inputmgr_int");
-		//FRuyiSDKManager::Instance()->SDK()->Subscriber->AddMessageHandler(this, &APlatformerCharacter::InputStateChangeHandler);
+		FRuyiSDKManager::Instance()->SDK()->Subscriber->Subscribe("service/inputmgr_int");
+		FRuyiSDKManager::Instance()->SDK()->Subscriber->AddMessageHandler(this, &APlatformerCharacter::InputStateChangeHandler);
 	}
 	else
 	{
@@ -96,14 +98,28 @@ void APlatformerCharacter::InputStateChangeHandler(std::string topic, apache::th
 	{
 		moveYAxis = -1;
 	}
-	if (Ruyi::SDK::CommonType::RuyiGamePadButtonFlags::GamePad_Up == idsc->ButtonFlags)
+	if (!isJump && Ruyi::SDK::CommonType::RuyiGamePadButtonFlags::GamePad_Up == idsc->ButtonFlags)
 	{
+		isJump = true;
 		OnStartJump();
 	}
 
-	if (Ruyi::SDK::CommonType::RuyiGamePadButtonFlags::GamePad_Down == idsc->ButtonFlags)
+	if (isJump && 0 == idsc->ButtonFlags)
 	{
+		isJump = false;
+		OnStopJump();
+	}
+
+	if (!isSlide && Ruyi::SDK::CommonType::RuyiGamePadButtonFlags::GamePad_Down == idsc->ButtonFlags)
+	{
+		isSlide = true;
 		OnStartSlide();
+	}
+
+	if (isSlide && 0 == idsc->ButtonFlags)
+	{
+		isSlide = false;
+		OnStopSlide();
 	}
 
 	if (Ruyi::SDK::CommonType::RuyiGamePadButtonFlags::GamePad_Left == idsc->ButtonFlags)
@@ -118,12 +134,23 @@ void APlatformerCharacter::InputStateChangeHandler(std::string topic, apache::th
 
 	if (Ruyi::SDK::CommonType::RuyiGamePadButtonFlags::GamePad_X == idsc->ButtonFlags)
 	{
+		APlatformerGameMode* MyGame = GetWorld()->GetAuthGameMode<APlatformerGameMode>();
 		APlatformerPlayerController* MyPC = Cast<APlatformerPlayerController>(Controller);
-		if (MyPC)
+		const EGameState::Type GameState = MyGame->GetGameState();
+		if (EGameState::Playing == GameState) 
 		{
-			MyPC->OnToggleInGameMenu();
+			if (MyPC)
+			{
+				MyPC->OnToggleInGameMenu();
+			}
 		}
 	}
+
+	if (Ruyi::SDK::CommonType::RuyiGamePadButtonFlags::GamePad_Start == idsc->ButtonFlags)
+	{
+		InputOK();
+	}
+
 
 	if ((Ruyi::SDK::CommonType::RuyiGamePadButtonFlags::GamePad_X | Ruyi::SDK::CommonType::RuyiGamePadButtonFlags::GamePad_A) == idsc->ButtonFlags)
 	{
@@ -527,6 +554,11 @@ void APlatformerCharacter::InputRight()
 
 void APlatformerCharacter::InputOK()
 {
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("GamePad_Start"));
+	}
+
 	APlatformerGameMode* MyGame = GetWorld()->GetAuthGameMode<APlatformerGameMode>();
 	APlatformerPlayerController* MyPC = Cast<APlatformerPlayerController>(Controller);
 	if (MyPC)

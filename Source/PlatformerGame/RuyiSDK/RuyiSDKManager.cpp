@@ -494,26 +494,18 @@ void FRuyiSDKManager::StartRuyiSDKAwardAchievement(int score)
 	m_Score = score;
 
 	if (m_Score > 45)
-	{
-		if (GEngine)
-		{
-			//PopupNotification a = new PopupNotification();
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("The NEXT Usain Bolt"));
-		}
+	{		
+		MainHUD->RuyiAchievement = TEXT("The NEXT Usain Bolt");
 	} else if (m_Score > 35 && m_Score <= 45)
-	{
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("I can do better than that"));
-		}
+	{		
+		MainHUD->RuyiAchievement = TEXT("I can do better than that");
 	} else
-	{
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("My grandma is faster than this"));
-		}
+	{		
+		MainHUD->RuyiAchievement = TEXT("My grandma is faster than this");
 	}
 	
+	MainHUD->bDrawAchievement = true;
+
 	if (!m_IsSDKReady) return;
 
 	MainHUD->ShowWaitingPanel(true);
@@ -538,19 +530,19 @@ void FRuyiSDKManager::RuyiSDKAsyncAwardAchievement()
 		{			
 			achievementId = "1";
 		}
+		RuyiNetAchievement achievement;
+		m_RuyiSDK->RuyiNet->GetGamificationService()->AwardAchievement(0, achievementId, achievement);
 		
+		std::string AchievedAchievementStr = "Achieved Achievement Id:";
 		std::vector<RuyiNetAchievement*> achievements;
 		m_RuyiSDK->RuyiNet->GetGamificationService()->ReadAchievedAchievements(0, 0, achievements);
 		std::for_each(achievements.begin(), achievements.end(), [&](RuyiNetAchievement* pAchievement)
 		{
-			std::string AchievedAchievementStr = "Achieved Achievement Id:" + pAchievement->AchievementId;
-			FString fstrAchievedAchievement = UTF8_TO_TCHAR(AchievedAchievementStr.c_str());
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, *fstrAchievedAchievement);
+			AchievedAchievementStr += pAchievement->AchievementId;
 		});
 
-		RuyiNetAchievement achievement;
-		m_RuyiSDK->RuyiNet->GetGamificationService()->AwardAchievement(0, achievementId, achievement);
-		
+		MainHUD->bDrawAwardedAchievements = true;
+		MainHUD->RuyiAwardedAchievements = UTF8_TO_TCHAR(AchievedAchievementStr.c_str());
 	} catch(std::exception e)
 	{
 		if (GEngine)
