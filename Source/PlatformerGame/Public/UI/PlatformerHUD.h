@@ -119,6 +119,8 @@ protected:
 	void DrawWaiting();
 	void DrawProfile();
 	void DrawLeadboard();
+	void DrawAchievement();
+	void DrawAwardedAchievements();
 
 public:
 	/** current highscore name */
@@ -179,11 +181,15 @@ public:
 	bool IsReady;
 	
 	FString RuyiUserProfile;
-	
+	FString RuyiAchievement;
+	FString RuyiAwardedAchievements;
+
 	uint32 bDrawLeadBoard : 1;
 	uint32 bWaitingActive : 1;
 	uint32 bDrawProfile : 1;
-	
+	uint32 bDrawAchievement : 1;
+	uint32 bDrawAwardedAchievements : 1;
+
 	void EndHighscoreEntryPrompt();
 	void UpdateHighscoreNamesAndScores(TArray<FRuyiLeaderBoardScore>& highscoreData);
 };

@@ -20,6 +20,10 @@ public class PlatformerGame : ModuleRules
         bUseRTTI = true;
         bEnableExceptions = true;
 
+        //PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+
+        Definitions.Add("BOOST_ALL_NO_LIB");
+
         PublicDependencyModuleNames.AddRange(
 			new string[] {
 				"Core",

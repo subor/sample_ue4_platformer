@@ -95,5 +95,26 @@ class UPlatformerBlueprintLibrary : public UBlueprintFunctionLibrary
 
 	UFUNCTION(BlueprintCallable, Category = HUD, meta = (WorldContext = "WorldContextObject"))
 	static void RuyiSDKGetLeadboardPage(class UObject* WorldContextObject, int sortType, int startIndex, int endIndex);
+
+	UFUNCTION(BlueprintCallable, Category = HUD, meta = (WorldContext = "WorldContextObject"))
+	static void RuyiSDKFriendList();
+
+	UFUNCTION(BlueprintCallable, Category = HUD, meta = (WorldContext = "WorldContextObject"))
+	static void RuyiSDKGetPartyInfo();
+
+	UFUNCTION(BlueprintCallable, Category = HUD, meta = (WorldContext = "WorldContextObject"))
+	static void RuyiSDKStartTelemetrySession();
+
+	UFUNCTION(BlueprintCallable, Category = HUD, meta = (WorldContext = "WorldContextObject"))
+	static void RuyiSDKUpdateVideo(class UObject* WorldContextObject, FString cloudFileName, FString localFilePath);
+
+	UFUNCTION(BlueprintCallable, Category = HUD, meta = (WorldContext = "WorldContextObject"))
+	static void RuyiSDKDownloadVideo(class UObject* WorldContextObject, FString cloudFileName);
+
+	UFUNCTION(BlueprintCallable, Category = HUD, meta = (WorldContext = "WorldContextObject"))
+	static void RuyiSDKAwardAchievement(class UObject* WorldContextObject, int score);
+
+	UFUNCTION(BlueprintCallable, Category = HUD, meta = (WorldContext = "WorldContextObject"))
+	static void RuyiSDKTakeScreenShot();
 #pragma endregion 
 };

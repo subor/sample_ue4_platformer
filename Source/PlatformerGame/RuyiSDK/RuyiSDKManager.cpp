@@ -3,6 +3,27 @@
 
 #include "boost/container/detail/json.hpp"
 
+#include "RuyiNet/Response/RuyiNetResponse.h"
+#include "RuyiNet/Response/RuyiNetProfile.h"
+#include "RuyiNet/Response/RuyiNetFindPlayersResponse.h"
+#include "RuyiNet/Response/RuyiNetGetPartyInfoResponse.h"
+#include "RuyiNet/Response/RuyiNetTelemetrySessionResponse.h"
+#include "RuyiNet/Response/RuyiNetUploadFileResponse.h"
+
+#include "RuyiNet/Service/Friend/RuyiNetFriendService.h"
+#include "RuyiNet/Service/Party/RuyiNetPartyService.h"
+#include "RuyiNet/Service/Telemetry/RuyiNetTelemetryService.h"
+#include "RuyiNet/Service/Video/RuyiNetVideoService.h"
+#include "RuyiNet/Service/Gamification/RuyiNetGamificationService.h"
+#include "RuyiNet/Service/Gamification/RuyiNetAchievement.h"
+
+#include "RuyiNet/Service/Leaderboard/RuyiNetLeaderboardEntry.h"
+#include "RuyiNet/Service/Leaderboard/RuyiNetLeaderboardPage.h"
+#include "RuyiNet/Service/Leaderboard/RuyiNetLeaderboardType.h"
+#include "RuyiNet/Service/Leaderboard/RuyiNetRotationType.h"
+#include "RuyiNet/Service/Leaderboard/RuyiNetLeaderboardService.h"
+#include "RuyiNet/Service/Leaderboard/Response/RuyiNetGetGlobalLeaderboardEntryCountResponse.h"
+
 #pragma region initilize
 FRuyiSDKManager* FRuyiSDKManager::Instance() 
 {
@@ -14,6 +35,7 @@ FRuyiSDKManager::FRuyiSDKManager()
 {
 	m_ProfileId = TEXT("");
 	m_PlayerName = TEXT("");
+	PlayerIDs[0] = { "bfdcafbf-b15d-4c01-93b0-b363b310ef80" };
 	m_IsSDKReady = false;
 }
 
@@ -26,7 +48,6 @@ void FRuyiSDKManager::Start()
 	m_Thread = nullptr;
 
 	InitRuyiSDK();
-
 }
 
 void FRuyiSDKManager::InitRuyiSDK()
@@ -39,6 +60,12 @@ void FRuyiSDKManager::InitRuyiSDK()
 		m_IsSDKReady = true;
 
 		UE_LOG(LogPlatformer, Log, TEXT("InitRuyiSDK Successful !!!"));
+
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, TEXT("Init RuyiSDK Successful !!!"));
+		}
+
 	} catch(std::exception e)
 	{
 		UE_LOG(LogPlatformer, Log, TEXT("InitRuyiSDK Exception !!!"));
@@ -153,88 +180,20 @@ void FRuyiSDKManager::RuyiSDKAsyncPostScoreToLeadboard()
 {
 	try
 	{
-		UE_LOG(LogPlatformer, Log, TEXT("RuyiSDKAsyncPostScoreToLeadboard score:%d !!!"), (int)m_Score);
+		bool isSuccess = false;
 
-		/*
-		nlohmann::json payload =
+		std::string leaderboardId = "1";
+
+		m_RuyiSDK->RuyiNet->GetLeaderboardService()->PostScoreToLeaderboard(isSuccess, 0, (int)m_Score, leaderboardId);
+
+		if (isSuccess) 
 		{
-			{ "leaderboardId", "11499_Shooter" },
-			{ "score", (int)m_Score }
-		};
-		*/
-
-		int score = 1000 - m_Score;
-
-		string payloadString1 = "{\"leaderboardId\":\"11499_Shooter\",\"score\":" 
-			+ to_string(score) + "}";
-
-		FString fPayload = UTF8_TO_TCHAR(payloadString1.c_str());
-		UE_LOG(LogPlatformer, Log, TEXT("RuyiSDKAsyncPostScoreToLeadboard payloadString:%s !!!"), *fPayload);
-
-		std::string ret;
-		m_RuyiSDK->BCService->Script_RunParentScript(ret, "PostScoreToLeaderboard", payloadString1, "RUYI", 0);
-		FString fRet = UTF8_TO_TCHAR(ret.c_str());
-
-		UE_LOG(LogPlatformer, Log, TEXT("RuyiSDKAsyncPostScoreToLeadboard ret:%s !!!"), *fRet);
-
-		std::string sortString = (m_SortType == Ruyi::SDK::BrainCloudApi::SortOrder::HIGH_TO_LOW) ? "HIGH_TO_LOW" : "LOW_TO_HIGH";
-
-		string payloadString2 = "{\"leaderboardId\":\"11499_Shooter\",\"sort\":\"" + sortString +
-			"\",\"startIndex\":\"0\",\"endIndex\":\"10\"}";
-
-		m_RuyiSDK->BCService->Script_RunParentScript(ret, "GetGlobalLeaderboardPage", payloadString2, "RUYI", 0);
-		fRet = UTF8_TO_TCHAR(ret.c_str());
-
-		UE_LOG(LogPlatformer, Log, TEXT("RuyiSDKAsyncGetLeadboardPage ret:%s !!!"), *fRet);
-
-		TSharedPtr<FJsonObject> jsonParsed;
-		TSharedRef<TJsonReader<TCHAR>> jsonReader = TJsonReaderFactory<TCHAR>::Create(fRet);
-
-		if (FJsonSerializer::Deserialize(jsonReader, jsonParsed))
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("PostScoreToLeaderboard Success !!!"));
+		} else 
 		{
-			int status = jsonParsed->GetIntegerField("status");
-
-			if (JSON_RESPONSE_OK == status)
-			{
-				TSharedPtr<FJsonObject> dataObject = jsonParsed->GetObjectField("data");
-				if (dataObject.IsValid())
-				{
-					TSharedPtr<FJsonObject> responseObject = dataObject->GetObjectField("response");
-					if (responseObject.IsValid())
-					{
-						TArray<TSharedPtr<FJsonValue>> leaderboardScores = responseObject->GetArrayField("leaderboard");
-
-						TArray<FRuyiLeaderBoardScore> scores;
-						for (int i = 0; i < leaderboardScores.Num(); ++i)
-						{
-							TSharedPtr<FJsonObject> tmp = leaderboardScores[i]->AsObject();
-							FString playerId = tmp->GetStringField("playerId");
-							FString name = tmp->GetStringField("name");
-							int rank = tmp->GetIntegerField("rank");
-							int score = tmp->GetIntegerField("score");
-
-							if (name.IsEmpty() || name == TEXT(""))
-							{
-								name = TEXT("No Name");
-							}
-
-							UE_LOG(LogPlatformer, Log, TEXT("RuyiSDKAsyncGetLeadboardPage rank:%d score:%d !!!"), rank, score);
-
-							FRuyiLeaderBoardScore tmpScore;
-							tmpScore.profileId = playerId;
-							tmpScore.name = name;
-							tmpScore.rank = rank;
-							tmpScore.score = 1000 - score;
-							if (tmpScore.score > 1000) tmpScore.score = 1000;
-							if (tmpScore.score < 0) tmpScore.score = 0;
-							scores.Add(tmpScore);
-						}
-
-						MainHUD->UpdateHighscoreNamesAndScores(scores);
-					}
-				}
-			}
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("PostScoreToLeaderboard Fail !!!"));
 		}
+
 	} catch(std::exception e)
 	{
 		UE_LOG(LogPlatformer, Log, TEXT("RuyiSDKAsyncPostScoreToLeadboard exception !!!"));
@@ -262,77 +221,30 @@ void FRuyiSDKManager::RuyiSDKAsyncGetLeadboardPage()
 {
 	try
 	{
-		std::string sortString = (m_SortType == Ruyi::SDK::BrainCloudApi::SortOrder::HIGH_TO_LOW) ? "HIGH_TO_LOW" : "LOW_TO_HIGH";
-		/*
-		nlohmann::json payload =
+		RuyiNetGetGlobalLeaderboardEntryCountResponse response;
+		std::string leaderboardId = "1";
+		m_RuyiSDK->RuyiNet->GetLeaderboardService()->GetGlobalLeaderboardEntryCount(0, leaderboardId, response);
+
+		std::string entryCountStr = "RuyiSDKAsyncGetLeadboardPage entryCount:" + response.data.entryCount;
+		FString fstrEntryCountStr = UTF8_TO_TCHAR(entryCountStr.c_str());
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, *fstrEntryCountStr);
+
+		RuyiNetLeaderboardPage page;
+		SortOrder::type sort = SortOrder::type::HIGH_TO_LOW;
+		int startIndex = 0;
+		int endIndex = 9;
+		m_RuyiSDK->RuyiNet->GetLeaderboardService()->GetGlobalLeaderboardPage(0, leaderboardId, sort, startIndex, endIndex, page);
+
+		std::vector<RuyiNetLeaderboardEntry*>& entries = page.GetEntries();
+
+		std::for_each(entries.begin(), entries.end(), [&](RuyiNetLeaderboardEntry* _entry)
 		{
-			{ "leaderboardId", "11499_Shooter" },
-			{ "sort", sortString },
-			{ "startIndex", m_StartIndex },
-			{ "endIndex", m_EndIndex }
-		};*/
+			std::string entryStr = "RuyiSDKAsyncGetLeadboardPage playId:" + _entry->GetPlayerId() + " score:" + to_string(_entry->GetScore());
+			FString fstrEntryStr = UTF8_TO_TCHAR(entryCountStr.c_str());
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, *fstrEntryStr);
 
-		string payloadString = "{\"leaderboardId\":\"11499_Shooter\",\"sort\":\"" + sortString + 
-			"\",\"startIndex\":\"" + to_string(m_StartIndex) + 
-			"\",\"endIndex\":\"" + to_string(m_EndIndex) + "\"}";
+		});
 
-		FString fPayload = UTF8_TO_TCHAR(payloadString.c_str());
-		UE_LOG(LogPlatformer, Log, TEXT("RuyiSDKAsyncGetLeadboardPage payloadString:%s !!!"), *fPayload);
-
-		std::string ret;
-		m_RuyiSDK->BCService->Script_RunParentScript(ret, "GetGlobalLeaderboardPage", payloadString, "RUYI", 0);
-		FString fRet = UTF8_TO_TCHAR(ret.c_str());
-
-		UE_LOG(LogPlatformer, Log, TEXT("RuyiSDKAsyncGetLeadboardPage ret:%s !!!"), *fRet);
-
-		TSharedPtr<FJsonObject> jsonParsed;
-		TSharedRef<TJsonReader<TCHAR>> jsonReader = TJsonReaderFactory<TCHAR>::Create(fRet);
-
-		if (FJsonSerializer::Deserialize(jsonReader, jsonParsed)) 
-		{
-			int status = jsonParsed->GetIntegerField("status");
-
-			if (JSON_RESPONSE_OK == status) 
-			{
-				TSharedPtr<FJsonObject> dataObject = jsonParsed->GetObjectField("data");
-				if (dataObject.IsValid())
-				{
-					TSharedPtr<FJsonObject> responseObject = dataObject->GetObjectField("response");
-					if (responseObject.IsValid()) 
-					{
-						TArray<TSharedPtr<FJsonValue>> leaderboardScores = responseObject->GetArrayField("leaderboard");
-						
-						TArray<FRuyiLeaderBoardScore> scores;
-						for (int i = 0; i < leaderboardScores.Num(); ++i)
-						{
-							TSharedPtr<FJsonObject> tmp = leaderboardScores[i]->AsObject();
-							FString playerId = tmp->GetStringField("playerId");
-							FString name = tmp->GetStringField("name");
-							int rank = tmp->GetIntegerField("rank");
-							int score = tmp->GetIntegerField("score");
-
-							if (name.IsEmpty() || name == TEXT(""))
-							{
-								name = TEXT("No Name");
-							}
-
-							UE_LOG(LogPlatformer, Log, TEXT("RuyiSDKAsyncGetLeadboardPage rank:%d score:%d !!!"), rank, score);
-
-							FRuyiLeaderBoardScore tmpScore;
-							tmpScore.profileId = playerId;
-							tmpScore.name = name;
-							tmpScore.rank = rank;
-							tmpScore.score = 1000 - score;
-							if (tmpScore.score > 1000) tmpScore.score = 1000;
-							if (tmpScore.score < 0) tmpScore.score = 0;
-							scores.Add(tmpScore);
-						}
-
-						MainHUD->UpdateHighscoreNamesAndScores(scores);
-					}
-				}
-			}	
-		}
 	}catch(std::exception e)
 	{
 		UE_LOG(LogPlatformer, Log, TEXT("RuyiSDKAsyncGetLeadboardPage exception !!!"));
@@ -340,6 +252,346 @@ void FRuyiSDKManager::RuyiSDKAsyncGetLeadboardPage()
 
 	EndThread();
 }
+
+void FRuyiSDKManager::StartRuyiSDKListFriends()
+{
+	if (!m_IsSDKReady) return;
+
+	MainHUD->ShowWaitingPanel(true);
+
+	m_RuyiSDKRequestType = RuyiSDKRequestType::RuyiSDKListFriends;
+
+	StartThread();
+}
+
+void FRuyiSDKManager::RuyiSDKAsyncListFriends()
+{
+	try
+	{
+		RuyiNetFriendListResponse response;
+		m_RuyiSDK->RuyiNet->GetFriendService()->ListFriends(0, response);
+
+		typedef RuyiNetFriendListResponse::Data::Response::Friend ruyiFriend;
+		
+		if (response.data.response.friends.size() > 0) 
+		{
+			std::for_each(response.data.response.friends.begin(), response.data.response.friends.end(), [&](ruyiFriend& friendData)
+			{
+				if (GEngine)
+				{
+					string info = friendData.playerId + " " + friendData.name;
+					FString fInfo = UTF8_TO_TCHAR(info.c_str());
+					GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, *fInfo);
+				}
+			});
+		} else 
+		{
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("No Friends Data !!!"));
+			}
+		}
+	} catch (std::exception e)
+	{
+		UE_LOG(LogPlatformer, Log, TEXT("RuyiSDKAsyncListFriends exception !!!"));
+	}
+
+	EndThread();
+}
+
+void FRuyiSDKManager::StartRuyiSDKGetPartyInfo()
+{
+	if (!m_IsSDKReady) return;
+
+	MainHUD->ShowWaitingPanel(true);
+
+	m_RuyiSDKRequestType = RuyiSDKRequestType::RuyiSDKGetPartyInfo;
+
+	StartThread();
+}
+
+void FRuyiSDKManager::RuyiSDKAsyncGetPartyInfo() 
+{
+	try
+	{
+		RuyiNetGetPartyInfoResponse response;
+		m_RuyiSDK->RuyiNet->GetPartyService()->GetPartyInfo(0, response);
+
+		typedef RuyiNetGetPartyInfoResponse::Data::Response::Group ruyiPartyGroup;
+
+		if (response.data.response.groups.size() > 0) 
+		{
+			std::for_each(response.data.response.groups.begin(), response.data.response.groups.end(), [&](ruyiPartyGroup& groupData) 
+			{
+				if (GEngine)
+				{
+					string info = groupData.name + " " + groupData.groupId;
+					FString fInfo = UTF8_TO_TCHAR(info.c_str());
+					GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, *fInfo);
+				}
+			});		
+		} else 
+		{
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("No Party Data "));
+			}
+		}
+	} catch (std::exception e)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Get Party Info Exception !!!"));
+		}
+	}
+
+	EndThread();
+}
+
+void FRuyiSDKManager::StartRuyiSDKStartTelemetrySession() 
+{
+	if (!m_IsSDKReady) return;
+
+	MainHUD->ShowWaitingPanel(true);
+
+	m_RuyiSDKRequestType = RuyiSDKRequestType::RuyiSDKStartTelemetrySession;
+
+	StartThread();
+}
+
+void FRuyiSDKManager::RuyiSDKAsyncStartTelemetrySession()
+{
+	try 
+	{
+		RuyiNetTelemetrySession session;
+		RuyiNetTelemetrySessionResponse response;
+		m_RuyiSDK->RuyiNet->GetTelemetryService()->StartTelemetrySession(0, response, session);
+
+		if (0 != session.GetId().compare("")) 
+		{
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Start Telemetry Service !!!"));
+			}
+
+			std::map<std::string, std::string> customData;
+			customData["position"] = "[10, 10]";
+
+			RuyiNetResponse response1;
+			m_RuyiSDK->RuyiNet->GetTelemetryService()->LogTelemetryEvent(0, session.GetId(), "ATTACK", customData, response1);
+
+			if (JSON_RESPONSE_OK == response1.status) 
+			{
+				if (GEngine)
+				{
+					GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Log Telemetry Service !!!"));
+				}
+			}
+
+			m_RuyiSDK->RuyiNet->GetTelemetryService()->EndTelemetrySession(0, session.GetId(), response1);
+
+			if (JSON_RESPONSE_OK == response1.status)
+			{
+				if (GEngine)
+				{
+					GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("End Telemetry Service !!!"));
+				}
+			}
+		}
+		
+	} catch (std::exception e) 
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Telemetry Service Exception !!!"));
+		}
+	}
+
+	EndThread();
+}
+
+void FRuyiSDKManager::StartRuyiSDKUpdateVideo(FString& cloudFileName, FString& localFilePath)
+{
+	if (!m_IsSDKReady) return;
+
+	m_CloudFileName = TCHAR_TO_UTF8(*cloudFileName);
+	m_localFilePath = TCHAR_TO_UTF8(*localFilePath);
+
+	MainHUD->ShowWaitingPanel(true);
+
+	m_RuyiSDKRequestType = RuyiSDKRequestType::RuyiSDKUpdateVideo;
+
+	StartThread();
+}
+
+void FRuyiSDKManager::RuyiSDKAsyncUpdateVideo() 
+{
+	try
+	{
+		RuyiNetUploadFileResponse response;
+
+		m_RuyiSDK->RuyiNet->GetVideoService()->UploadVideo(0, m_CloudFileName, m_localFilePath, response);
+
+		if (JSON_RESPONSE_OK == response.status)
+		{
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Update Video finish !!!"));
+			}
+		}
+	} catch (std::exception e) 
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Update Video Exception !!!"));
+		}
+	}
+
+	EndThread();
+}
+
+void FRuyiSDKManager::StartRuyiSDKDownloadVideo(FString& cloudFileName)
+{
+	if (!m_IsSDKReady) return;
+	
+	m_CloudFileName = TCHAR_TO_UTF8(*cloudFileName);
+
+	MainHUD->ShowWaitingPanel(true);
+
+	m_RuyiSDKRequestType = RuyiSDKRequestType::RuyiSDKDownloadVideo;
+
+	StartThread();
+}
+
+void FRuyiSDKManager::RuyiSDKAsyncDownloadVideo() 
+{
+	try
+	{
+		RuyiNetResponse response;
+
+		m_RuyiSDK->RuyiNet->GetVideoService()->DownloadVideo(0, m_CloudFileName, response);
+
+		if (JSON_RESPONSE_OK == response.status)
+		{
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Download Video finish !!!"));
+			}
+		}
+	} catch (std::exception e)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Download Video Exception !!!"));
+		}
+	}
+
+	EndThread();
+}
+
+void FRuyiSDKManager::StartRuyiSDKAwardAchievement(int score)
+{
+	m_Score = score;
+
+	if (m_Score > 45)
+	{		
+		MainHUD->RuyiAchievement = TEXT("The NEXT Usain Bolt");
+	} else if (m_Score > 35 && m_Score <= 45)
+	{		
+		MainHUD->RuyiAchievement = TEXT("I can do better than that");
+	} else
+	{		
+		MainHUD->RuyiAchievement = TEXT("My grandma is faster than this");
+	}
+	
+	MainHUD->bDrawAchievement = true;
+
+	if (!m_IsSDKReady) return;
+
+	MainHUD->ShowWaitingPanel(true);
+
+	m_RuyiSDKRequestType = RuyiSDKRequestType::RuyiSDKAwardAchievement;
+
+	StartThread();
+}
+
+void FRuyiSDKManager::RuyiSDKAsyncAwardAchievement() 
+{
+	try 
+	{
+		std::string achievementId = "0";
+		if (m_Score > 45)
+		{		
+			achievementId = "3";
+		} else if (m_Score > 35 && m_Score <= 45)
+		{		
+			achievementId = "2";
+		} else 
+		{			
+			achievementId = "1";
+		}
+		RuyiNetAchievement achievement;
+		m_RuyiSDK->RuyiNet->GetGamificationService()->AwardAchievement(0, achievementId, achievement);
+		
+		std::string AchievedAchievementStr = "Achieved Achievement Id:";
+		std::vector<RuyiNetAchievement*> achievements;
+		m_RuyiSDK->RuyiNet->GetGamificationService()->ReadAchievedAchievements(0, 0, achievements);
+		std::for_each(achievements.begin(), achievements.end(), [&](RuyiNetAchievement* pAchievement)
+		{
+			AchievedAchievementStr += pAchievement->AchievementId;
+		});
+
+		MainHUD->bDrawAwardedAchievements = true;
+		MainHUD->RuyiAwardedAchievements = UTF8_TO_TCHAR(AchievedAchievementStr.c_str());
+	} catch(std::exception e)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("AwardAchievement exception !!!"));
+		}
+	}
+
+	EndThread();
+}
+
+void FRuyiSDKManager::StartRuyiSDKTakeScreenShot() 
+{
+	if (!m_IsSDKReady) return;
+
+	MainHUD->ShowWaitingPanel(true);
+
+	m_RuyiSDKRequestType = RuyiSDKRequestType::RuyiSDKTakeScreenShot;
+
+	StartThread();
+}
+
+void FRuyiSDKManager::RuyiSDKAsyncTakeScreenShot()
+{
+	try 
+	{
+		bool result = m_RuyiSDK->OverlayService->TakeScreenShot();
+
+		if (GEngine)
+		{
+			if (result)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Screen Shot return true !!!"));
+			} else 
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Screen Shot return false !!!"));
+			}
+		}
+	} catch(std::exception e)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Screen Shot !!!"));
+		}
+	}
+
+	EndThread();
+}
+
 #pragma endregion
 
 #pragma region FRunnable & multi-thread
@@ -391,6 +643,26 @@ uint32 FRuyiSDKManager::Run()
 				break;
 			case RuyiSDKRequestType::RuyiSDKGetLeadboardPage:
 				RuyiSDKAsyncGetLeadboardPage();
+			case RuyiSDKRequestType::RuyiSDKListFriends:
+				RuyiSDKAsyncListFriends();
+				break;
+			case RuyiSDKRequestType::RuyiSDKGetPartyInfo:
+				RuyiSDKAsyncGetPartyInfo();
+				break;
+			case RuyiSDKRequestType::RuyiSDKStartTelemetrySession:
+				RuyiSDKAsyncStartTelemetrySession();
+				break;
+			case RuyiSDKRequestType::RuyiSDKUpdateVideo:
+				RuyiSDKAsyncUpdateVideo();
+				break;
+			case RuyiSDKRequestType::RuyiSDKDownloadVideo:
+				RuyiSDKAsyncDownloadVideo();
+				break;
+			case RuyiSDKRequestType::RuyiSDKAwardAchievement:
+				RuyiSDKAsyncAwardAchievement();
+				break;
+			case RuyiSDKRequestType::RuyiSDKTakeScreenShot:
+				RuyiSDKAsyncTakeScreenShot();
 				break;
 			default:break;
 			}

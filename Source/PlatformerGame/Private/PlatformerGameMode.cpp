@@ -69,6 +69,17 @@ void APlatformerGameMode::PrepareRound(bool bRestarting)
 			Pawn->SetActorHiddenInGame(false);
 		}
 	}
+
+	//zzm
+	APlatformerHUD* HUD = PC ? Cast<APlatformerHUD>(PC->MyHUD) : NULL;
+	if (HUD)
+	{
+		HUD->bDrawAchievement = false;
+		HUD->bDrawLeadBoard = false;
+		HUD->bWaitingActive = false;
+		HUD->bDrawAwardedAchievements = false;
+	}
+	//zzm
 }
 
 void APlatformerGameMode::SetCanBeRestarted(bool bAllowRestart)

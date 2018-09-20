@@ -16,6 +16,9 @@
 */
 
 #define JSON_RESPONSE_OK 200
+#define TEST_APP_ID "30006"
+#define TEST_APP_SECRET "1fbd6992-2684-426e-8399-892e8a5a7ccb"
+#define TEST_LEADERBOARD_ID "testCreate" 
 
 UENUM(BlueprintType)
 enum class RuyiSDKRequestType : uint8
@@ -25,9 +28,19 @@ enum class RuyiSDKRequestType : uint8
 	RuyiSDKRequestGetProfile,
 	RuyiSDKPostScoreToLeadboard,
 	RuyiSDKGetLeadboardPage,
+	RuyiSDKListFriends,
+	RuyiSDKGetPartyInfo,
+	RuyiSDKCreateLobby,
+	RuyiSDKStartTelemetrySession,
+	RuyiSDKUpdateVideo,
+	RuyiSDKDownloadVideo,
+	RuyiSDKAwardAchievement,
+	RuyiSDKTakeScreenShot,
 };
 
-
+using namespace Ruyi;
+using namespace Ruyi::SDK::Online;
+using namespace Ruyi::SDK::CommonType;
 
 class FRuyiSDKManager : public FRunnable
 {
@@ -38,7 +51,7 @@ public:
 	bool IsSDKReady();
 
 	APlatformerHUD* MainHUD;
-
+	
 #pragma region Ruyi SDK function
 
 	void StartRuyiSDKGetProfile();
@@ -49,6 +62,27 @@ public:
 
 	void StartRuyiSDKGetLeadboardPage(Ruyi::SDK::BrainCloudApi::SortOrder::type sort, int startIndex, int endIndex);
 	void RuyiSDKAsyncGetLeadboardPage();
+
+	void StartRuyiSDKListFriends();
+	void RuyiSDKAsyncListFriends();
+
+	void StartRuyiSDKGetPartyInfo();
+	void RuyiSDKAsyncGetPartyInfo();
+
+	void StartRuyiSDKStartTelemetrySession();
+	void RuyiSDKAsyncStartTelemetrySession();
+
+	void StartRuyiSDKUpdateVideo(FString& cloudFileName, FString& localFilePath);
+	void RuyiSDKAsyncUpdateVideo();
+
+	void StartRuyiSDKDownloadVideo(FString& cloudFileName);
+	void RuyiSDKAsyncDownloadVideo();
+
+	void StartRuyiSDKAwardAchievement(int score);
+	void RuyiSDKAsyncAwardAchievement();
+
+	void StartRuyiSDKTakeScreenShot();
+	void RuyiSDKAsyncTakeScreenShot();
 #pragma endregion
 
 #pragma region Ruyi SDK Data 
@@ -87,4 +121,9 @@ private:
 	FCriticalSection m_mutex;
 	bool m_ThreadEnd;
 	bool m_ThreadBegin;
+
+	std::string PlayerIDs[1];
+
+	std::string m_localFilePath;
+	std::string m_CloudFileName;
 };
