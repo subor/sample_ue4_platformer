@@ -1,27 +1,54 @@
 {
 	appID: "com.ruyi.jade.PlatformerGame",
+	version:"1.0.0.0",
+	use_sdk:{
+		minSdkVersion : "1.0.0.0"
+	},
 	application:	{
 		name:"@com.ruyi.PlatformerGame",
-		label:"@antestapp",
 		icon:"bluetooth.png",
 		description:"@antestapp",
-		logo:"logo.png",
+		properties:[
+			"SinglePlayer",
+			"RuyiAchievements"
+		],
+		platform:[
+			"RuyiConsole",
+			"Windows",
+		],
+		size:12580,
+		languages:[
+			{
+				languageCode:"en-US",
+				uiInterface:true,
+				fullAudio:true,
+				subtitles:true,
+			},
+			{
+				languageCode:"ja-JP",
+				uiInterface:true,
+				fullAudio:false,
+				subtitles:true,
+			},
+			{
+				languageCode:"de-DE",
+				uiInterface:true,
+				fullAudio:false,
+				subtitles:false,
+			},
+		],
+		
 		activity:[
 			{
 				name:"main",
 				exePath:"PlatformerGame/PlatformerGame.exe",
-				label:"main test activity",
 				description:"@antestapp",
-				icon:"logo.png"
 			}
-		]
+		],
 	},
 	use_permissions:[
 		{
 			name:"jade.permission.ACHIEVEMENT"
 		}
 	],
-	use_sdk:{
-		minSdkVersion : "1.0.0.0"
-	}
 }
