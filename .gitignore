@@ -59,6 +59,10 @@ Intermediate/*
 # Cache files for the editor to use
 DerivedDataCache/*
 
+# Plugin intermediate/binary files
+Plugins/*/Intermediate/*
+Plugins/*/Binaries/*
+
 # Mac Artifacts
 .DS_Store
 
