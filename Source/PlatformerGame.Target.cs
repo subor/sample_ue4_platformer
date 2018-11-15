@@ -5,10 +5,10 @@ using System.Collections.Generic;
 
 public class PlatformerGameTarget : TargetRules
 {
-    public PlatformerGameTarget(TargetInfo Target) : base(Target)
+	public PlatformerGameTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
 
-        ExtraModuleNames.Add("PlatformerGame");
+		ExtraModuleNames.Add("PlatformerGame");
 	}
 }
