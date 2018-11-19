@@ -1,4 +1,4 @@
-// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
+// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
 using System.IO;
@@ -17,13 +17,16 @@ public class PlatformerGame : ModuleRules
 
 	public PlatformerGame(ReadOnlyTargetRules Target) : base(Target)
 	{
+		PrivatePCHHeaderFile = "Public/PlatformerGame.h";
 		bUseRTTI = true;
 		bEnableExceptions = true;
+        // error C4668: 'BOOST_GCC_VERSION' is not defined as a preprocessor macro, replacing with '0' for '#if/#elif'
+        bEnableUndefinedIdentifierWarnings = false;
 
-		//PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+        //PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		//Definitions.Add("BOOST_ALL_NO_LIB");
-		Definitions.Add("BOOST_ALL_DYN_LINK");
+        //PublicDefinitions.Add("BOOST_ALL_NO_LIB");
+        PublicDefinitions.Add("BOOST_ALL_DYN_LINK");
 
 		PublicDependencyModuleNames.AddRange(
 			new string[] {
@@ -31,19 +34,14 @@ public class PlatformerGame : ModuleRules
 				"CoreUObject",
 				"Engine",
 				"InputCore", 
-				   "GameMenuBuilder",
-				"Json",
-				//"DesktopPlatform",
-				"ImageWrapper",
-				"RHI",
-				"RenderCore",
-				"UMG",
+               	"GameMenuBuilder",
+                "Json",
 			}
 		);
 
 		PrivateDependencyModuleNames.AddRange(
 			new string[] {
-				"PlatformerGameLoadingScreen",
+				"PlatformerGameLoadingScreen"
 			}
 		); 
 
@@ -65,26 +63,19 @@ public class PlatformerGame : ModuleRules
 
 		PrivateIncludePaths.AddRange(new string[] { 
 			"PlatformerGame/Private/UI/Menu",
-			//"PlatformerGame/include",
 			});
 
 		PublicAdditionalLibraries.Add(Path.Combine(LibPath, "RuyiSDK.lib"));
 		PublicAdditionalLibraries.Add(Path.Combine(LibPath, "zmq", "libzmq.lib"));
 
-		// PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "libboost_chrono-vc141-mt-1_64.lib"));
-		// PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "libboost_date_time-vc141-mt-1_64.lib"));
-		// PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "libboost_system-vc141-mt-1_64.lib"));
-		// PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "libboost_thread-vc141-mt-1_64.lib"));
-		PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "boost_chrono-vc141-mt-1_64.lib"));
-		PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "boost_date_time-vc141-mt-1_64.lib"));
-		PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "boost_system-vc141-mt-1_64.lib"));
-		PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "boost_thread-vc141-mt-1_64.lib"));
+        // PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "libboost_chrono-vc141-mt-1_64.lib"));
+        // PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "libboost_date_time-vc141-mt-1_64.lib"));
+        // PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "libboost_system-vc141-mt-1_64.lib"));
+        // PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "libboost_thread-vc141-mt-1_64.lib"));
+        PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "boost_chrono-vc141-mt-1_64.lib"));
+        PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "boost_date_time-vc141-mt-1_64.lib"));
+        PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "boost_system-vc141-mt-1_64.lib"));
+        PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "boost_thread-vc141-mt-1_64.lib"));
 
-		PrivateIncludePathModuleNames.AddRange(
-			new string[]
-			{
-				"DesktopPlatform",
-			}
-			);
-	}
+    }
 }
