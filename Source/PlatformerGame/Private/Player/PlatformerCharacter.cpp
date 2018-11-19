@@ -1,4 +1,4 @@
-// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
+// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 
 #include "PlatformerGame.h"
 #include "PlatformerCharacter.h"
@@ -12,10 +12,9 @@ APlatformerCharacter::APlatformerCharacter(const FObjectInitializer& ObjectIniti
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<UPlatformerPlayerMovementComp>(ACharacter::CharacterMovementComponentName))
 {
 	MinSpeedForHittingWall = 200.0f;
-	GetMesh()->MeshComponentUpdateFlag = EMeshComponentUpdateFlag::AlwaysTickPoseAndRefreshBones;
-
 	isJump = false;
 	isSlide = false;
+	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 }
 
 void APlatformerCharacter::BeginPlay() 
@@ -392,7 +391,6 @@ void APlatformerCharacter::OnStartJump()
 	APlatformerPlayerController* MyPC = Cast<APlatformerPlayerController>(Controller);
 	if (MyPC)
 	{
-		//zzm
 		//Add keyboard/gamepad operation logic when drawing HighscoreEntryPrompt
 		EGameState::Type GameState = MyGame->GetGameState();
 
@@ -407,7 +405,6 @@ void APlatformerCharacter::OnStartJump()
 				}
 			}
 		}
-		//zzm
 
 		if (MyPC->TryStartingGame())
 		{
@@ -420,8 +417,6 @@ void APlatformerCharacter::OnStartJump()
 			bPressedJump = true;
 		}
 	}
-
-	
 }
 
 void APlatformerCharacter::OnStopJump()
@@ -436,7 +431,6 @@ void APlatformerCharacter::OnStartSlide()
 	APlatformerPlayerController* MyPC = Cast<APlatformerPlayerController>(Controller);
 	if (MyPC)
 	{
-		//zzm
 		//Add keyboard/gamepad operation logic when drawing HighscoreEntryPrompt
 		EGameState::Type GameState = MyGame->GetGameState();
 
@@ -451,7 +445,6 @@ void APlatformerCharacter::OnStartSlide()
 				}
 			}
 		}
-		//zzm
 
 		if (MyPC->TryStartingGame())
 		{

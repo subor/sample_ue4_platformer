@@ -1,16 +1,8 @@
-// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
+// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 
 #include "FootIKRuntimePrivatePCH.h"
 #include "AnimationRuntime.h"
 #include "Animation/AnimInstanceProxy.h"
-
-FAnimNode_FootPlacementIK::FAnimNode_FootPlacementIK()
-	: FAnimNode_SkeletalControlBase()
-	, BlendTime(0.2f)
-	, ActivationTime(0)
-	, BlendState(STATE_UNKNOWN)
-{
-}
 
 void FAnimNode_FootPlacementIK::PreUpdate(const UAnimInstance* InAnimInstance)
 {

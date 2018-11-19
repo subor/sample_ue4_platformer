@@ -90,7 +90,6 @@ public:
 	/** shows highscore prompt, calls HighscoreNameAccepted blueprint implementable event when user is done */
 	void ShowHighscorePrompt();
 
-	//zzm
 	void ShowWaitingPanel(bool isShow);
 	void ShowProfile(FString profile);
 
@@ -121,13 +120,6 @@ protected:
 	void DrawLeadboard();
 	void DrawAchievement();
 	void DrawAwardedAchievements();
-
-public:
-	/** current highscore name */
-	TArray<char> HighScoreName;
-
-	/** current letter to change while entering highscore name */
-	uint8 CurrentLetter;
 
 private:
 
@@ -161,9 +153,13 @@ private:
 
 	/** current UI scale */
 	float UIScale;
+public:
+	/** current highscore name */
+	TArray<char> HighScoreName;
 
-	
-
+	/** current letter to change while entering highscore name */
+	uint8 CurrentLetter;
+private:
 	/* if we should show enter name prompt */
 	uint32 bEnterNamePromptActive : 1;
 

@@ -1,4 +1,4 @@
-// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
+// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -16,11 +16,11 @@ struct FOOTIKRUNTIME_API FAnimNode_FootPlacementIK : public FAnimNode_SkeletalCo
 
 	/** Effector Location. **/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=JointTarget, meta=(PinShownByDefault))
-	FVector JointTargetLocation;
+	FVector JointTargetLocation = FVector::ZeroVector;
 
 	/** Reference frame of Effector Location. */
 	UPROPERTY(EditAnywhere, Category=JointTarget)
-	TEnumAsByte<enum EBoneControlSpace> JointTargetLocationSpace;
+	TEnumAsByte<enum EBoneControlSpace> JointTargetLocationSpace = BCS_WorldSpace;
 
 	/** If EffectorLocationSpace is a bone, this is the bone to use. **/
 	UPROPERTY(EditAnywhere, Category=JointTarget)
@@ -32,20 +32,18 @@ struct FOOTIKRUNTIME_API FAnimNode_FootPlacementIK : public FAnimNode_SkeletalCo
 
 	/** limits for bone stretching */
 	UPROPERTY(EditAnywhere, Category=IK)
-	FVector2D StretchLimits;
+	FVector2D StretchLimits = FVector2D::ZeroVector;
 
 	/** Z offset from hit point, to correct effector location */
 	UPROPERTY(EditAnywhere, Category=IK)
-	float HitZOffset;
+	float HitZOffset = 0.0f;
 
 	/** time to blend in/out node's influence */
 	UPROPERTY(EditAnywhere, Category=IK)
-	float BlendTime;
+	float BlendTime = 0.2f;
 
 	/** Internal use - activation time for node blending */
-	float ActivationTime;
-
-	FAnimNode_FootPlacementIK();
+	float ActivationTime = 0.0f;
 
 	// FAnimNode_Base interface
 	virtual bool HasPreUpdate() const override { return true; }
@@ -57,6 +55,12 @@ struct FOOTIKRUNTIME_API FAnimNode_FootPlacementIK : public FAnimNode_SkeletalCo
 	virtual bool IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer& RequiredBones) override;
 	// End of FAnimNode_SkeletalControlBase interface
 
+	// Replace this when bitfields can have default member initializers
+	FAnimNode_FootPlacementIK()
+		: bAllowStretching(0)
+	{
+	}
+
 private:
 	enum EMyBlendState
 	{
@@ -66,10 +70,10 @@ private:
 	};
 
 	/** state of our node (init, blend-in, blend-out) */
-	EMyBlendState BlendState;
+	EMyBlendState BlendState = STATE_UNKNOWN;
 
 	/** effector location calculated dynamically */
-	FVector EffectorLocation;
+	FVector EffectorLocation = FVector::ZeroVector;
 
 	// FAnimNode_SkeletalControlBase interface
 	virtual void InitializeBoneReferences(const FBoneContainer& RequiredBones) override;

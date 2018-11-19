@@ -1,4 +1,4 @@
-// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
+// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 
 #include "PlatformerGameLoadingScreen.h"
 
@@ -14,15 +14,12 @@ struct FPlatformerGameLoadingScreenBrush : public FSlateDynamicImageBrush, publi
 	FPlatformerGameLoadingScreenBrush( const FName InTextureName, const FVector2D& InImageSize )
 		: FSlateDynamicImageBrush( InTextureName, InImageSize )
 	{
-		ResourceObject = LoadObject<UObject>( NULL, *InTextureName.ToString() );
+		SetResourceObject(LoadObject<UObject>( nullptr, *InTextureName.ToString() ));
 	}
 
 	virtual void AddReferencedObjects(FReferenceCollector& Collector)
 	{
-		if( ResourceObject )
-		{
-			Collector.AddReferencedObject(ResourceObject);
-		}
+		FSlateBrush::AddReferencedObjects(Collector);
 	}
 };
 

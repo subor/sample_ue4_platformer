@@ -1,4 +1,4 @@
-// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
+// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
 
@@ -8,7 +8,9 @@ public class PlatformerGameLoadingScreen : ModuleRules
 {
     public PlatformerGameLoadingScreen(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PrivateIncludePaths.Add("../../PlatformerGame/Source/PlatformerGameLoadingScreen/Private");
+		PrivatePCHHeaderFile = "Public/PlatformerGameLoadingScreen.h";
+
+		PCHUsage = PCHUsageMode.UseSharedPCHs;
 
         PrivateDependencyModuleNames.AddRange(
 			new string[] {

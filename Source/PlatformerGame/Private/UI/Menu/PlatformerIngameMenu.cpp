@@ -1,4 +1,4 @@
-// Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
+// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 
 #include "PlatformerGame.h"
 #include "PlatformerIngameMenu.h"
@@ -93,9 +93,9 @@ void FPlatformerIngameMenu::CloseAndExit()
 
 void FPlatformerIngameMenu::ReturnToMainMenu()
 {	
-	APlatformerPlayerController * PlatformPC = (PCOwner.IsValid())? Cast<APlatformerPlayerController>(PCOwner.Get()) : NULL;
-	FString RemoteReturnReason = NSLOCTEXT("NetworkErrors", "HostHasLeft", "Host has left the game.").ToString();
-	FString LocalReturnReason(TEXT(""));
+	APlatformerPlayerController* PlatformPC = (PCOwner.IsValid()? Cast<APlatformerPlayerController>(PCOwner.Get()) : nullptr);
+	const FText RemoteReturnReason = NSLOCTEXT("NetworkErrors", "HostHasLeft", "Host has left the game.");
+	const FText LocalReturnReason = FText::GetEmpty();
 
 	if ( PlatformPC )
 	{
@@ -106,14 +106,14 @@ void FPlatformerIngameMenu::ReturnToMainMenu()
 				APlayerController* Controller = Iterator->Get();
 				if (Controller && Controller->IsPrimaryPlayer() && Controller != PlatformPC) 
 				{
-					Controller->ClientReturnToMainMenu(RemoteReturnReason);
+					Controller->ClientReturnToMainMenuWithTextReason(RemoteReturnReason);
 				}
 			}
-			PlatformPC->ClientReturnToMainMenu(LocalReturnReason);
+			PlatformPC->ClientReturnToMainMenuWithTextReason(LocalReturnReason);
 		}
 		else
 		{
-			PlatformPC->ClientReturnToMainMenu(LocalReturnReason);
+			PlatformPC->ClientReturnToMainMenuWithTextReason(LocalReturnReason);
 		}
 	}
 	DestroyRootMenu();

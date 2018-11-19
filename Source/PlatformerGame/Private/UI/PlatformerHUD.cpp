@@ -128,7 +128,6 @@ void APlatformerHUD::HideHighscore()
 	bHighscoreActive = false;
 }
 
-//zzm
 void APlatformerHUD::ShowWaitingPanel(bool isShow)
 {
 	bWaitingActive = isShow;
@@ -472,7 +471,6 @@ void APlatformerHUD::DrawHUD()
 			}
 		}
 
-		//zzm
 		if (bDrawProfile)
 		{
 			DrawProfile();

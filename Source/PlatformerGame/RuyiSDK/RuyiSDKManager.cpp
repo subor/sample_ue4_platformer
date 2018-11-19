@@ -1,5 +1,5 @@
 #include "PlatformerGame.h"
-#include "RuyiSDKManager.h"
+#include "RuyiSDKManager.h" 
 
 #include "boost/container/detail/json.hpp"
 
