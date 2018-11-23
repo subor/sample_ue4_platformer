@@ -22,8 +22,8 @@ public class PlatformerGame : ModuleRules
 
 		//PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		//Definitions.Add("BOOST_ALL_NO_LIB");
-		Definitions.Add("BOOST_ALL_DYN_LINK");
+		Definitions.Add("BOOST_ALL_NO_LIB");
+		//Definitions.Add("BOOST_ALL_DYN_LINK");
 
 		PublicDependencyModuleNames.AddRange(
 			new string[] {
@@ -71,14 +71,14 @@ public class PlatformerGame : ModuleRules
 		PublicAdditionalLibraries.Add(Path.Combine(LibPath, "RuyiSDK.lib"));
 		PublicAdditionalLibraries.Add(Path.Combine(LibPath, "zmq", "libzmq.lib"));
 
-		// PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "libboost_chrono-vc141-mt-1_64.lib"));
-		// PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "libboost_date_time-vc141-mt-1_64.lib"));
-		// PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "libboost_system-vc141-mt-1_64.lib"));
-		// PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "libboost_thread-vc141-mt-1_64.lib"));
-		PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "boost_chrono-vc141-mt-1_64.lib"));
-		PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "boost_date_time-vc141-mt-1_64.lib"));
-		PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "boost_system-vc141-mt-1_64.lib"));
-		PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "boost_thread-vc141-mt-1_64.lib"));
+		PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "libboost_chrono-vc141-mt-1_64.lib"));
+		PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "libboost_date_time-vc141-mt-1_64.lib"));
+		PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "libboost_system-vc141-mt-1_64.lib"));
+		PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "libboost_thread-vc141-mt-1_64.lib"));
+		// PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "boost_chrono-vc141-mt-1_64.lib"));
+		// PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "boost_date_time-vc141-mt-1_64.lib"));
+		// PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "boost_system-vc141-mt-1_64.lib"));
+		// PublicAdditionalLibraries.Add(Path.Combine(LibPath, "boost", "boost_thread-vc141-mt-1_64.lib"));
 
 		PrivateIncludePathModuleNames.AddRange(
 			new string[]
