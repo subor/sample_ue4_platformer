@@ -6,7 +6,7 @@
 	},
 	"application":{
 		"name":"@com.ruyi.PlatformerGame",
-		"icon":"bluetooth.png",
+		"icon":"icon.png",
 		"description":"@description",
 		"properties":[
 			"SinglePlayer",
