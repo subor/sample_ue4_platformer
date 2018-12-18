@@ -1,10 +1,10 @@
 {
-	"appID": "18963",
+	"appID": "18259",
 	"version":"1.0.0.0",
 	"use_sdk":{
 		"minSdkVersion" : "1.0.0.0"
 	},
-	"application":{
+	"application":	{
 		"name":"@com.ruyi.PlatformerGame",
 		"icon":"bluetooth.png",
 		"description":"@description",
@@ -37,11 +37,10 @@
 				"subtitles":true
 			}
 		],
-		
 		"activity":[
 			{
 				"name":"main",
-				"exePath":"PlatformerGame.exe",
+				"exePath":"PlatformerGame/PlatformerGame.exe",
 				"description":"@description"
 			}
 		]
