@@ -6,7 +6,7 @@
 	},
 	application:	{
 		name:"@com.ruyi.PlatformerGame",
-		icon:"bluetooth.png",
+		icon:"Platformer.png",
 		description:"@antestapp",
 		properties:[
 			"SinglePlayer",
