@@ -1,69 +1,54 @@
 {
-	"appID": "18259",
-	"version":"1.0.0.0",
-	"use_sdk":{
-		"minSdkVersion" : "1.0.0.0"
+	appID: "com.ruyi.jade.PlatformerGame",
+	version:"1.0.0.0",
+	use_sdk:{
+		minSdkVersion : "1.0.0.0"
 	},
-	"application":	{
-		"name":"@com.ruyi.PlatformerGame",
-		"icon":"icon.png",
-		"description":"@description",
-		"properties":[
+	application:	{
+		name:"@com.ruyi.PlatformerGame",
+		icon:"Platformer.png",
+		description:"@antestapp",
+		properties:[
 			"SinglePlayer",
 			"RuyiAchievements"
 		],
-		"platform":[
+		platform:[
 			"RuyiConsole",
-			"Windows"
+			"Windows",
 		],
-		"size":12580,
-		"languages":[
+		size:12580,
+		languages:[
 			{
-				"languageCode":"en-US",
-				"uiInterface":true,
-				"fullAudio":true,
-				"subtitles":true
+				languageCode:"en-US",
+				uiInterface:true,
+				fullAudio:true,
+				subtitles:true,
 			},
 			{
-				"languageCode":"zh-CN",
-				"uiInterface":true,
-				"fullAudio":false,
-				"subtitles":true
+				languageCode:"ja-JP",
+				uiInterface:true,
+				fullAudio:false,
+				subtitles:true,
 			},
 			{
-				"languageCode":"ja-JP",
-				"uiInterface":true,
-				"fullAudio":false,
-				"subtitles":true
+				languageCode:"de-DE",
+				uiInterface:true,
+				fullAudio:false,
+				subtitles:false,
+			},
+		],
+		
+		activity:[
+			{
+				name:"main",
+				exePath:"PlatformerGame/PlatformerGame.exe",
+				description:"@antestapp",
 			}
 		],
-		"activity":[
-			{
-				"name":"main",
-				"exePath":"PlatformerGame/PlatformerGame.exe",
-				"description":"@description"
-			}
-		]
 	},
-	"use_permissions":[
+	use_permissions:[
 		{
-			"name":"jade.permission.ACHIEVEMENT"
+			name:"jade.permission.ACHIEVEMENT"
 		}
 	],
-	"gamedb":{
-		"id": 6003,
-		"name": "PlatformerGame",
-		"conditions":[
-			{"name": "is-PlatformerGame.exe-present", "type": "ExePresent", "additionalArg": "PlatformerGame.exe"}
-		],
-		"detection": [
-			{"name": "PlatformerGame", "order": "1", "rules": [
-				{"cond": "is-PlatformerGame.exe-present"}
-			]}
-		],
-		"runtime": {
-			"features":{},
-			"ruyifeatures":{}
-		}
-	}
 }
