@@ -31,7 +31,7 @@ pipeline {
 		//Nuget Packages home
 		NUGET_PACKAGES = "c:/jenkins/packages"
 		//Unreal Engine root
-		UE_ROOT = "C:/Program Files/Epic Games/UE_4.18/Engine"
+		UE_ROOT = "C:/Program Files/Epic Games/UE_4.21/Engine"
 		//Temp folder
 		TEMP_DIR = 'temp'
 		//Root directory for all build tools
