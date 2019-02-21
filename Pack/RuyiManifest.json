@@ -1,64 +1,64 @@
 {
-	"appID": "18259",
-	"version":"1.0.0.0",
-	"use_sdk":{
-		"minSdkVersion" : "1.0.0.0"
+	"AppId": "18259",
+	"Version":"1.0.0.0",
+	"Sdk":{
+		"MinSdkVersion" : "1.0.0.0"
 	},
-	"application":{
-		"name":"@com.ruyi.PlatformerGame",
-		"icon":"icon.png",
-		"description":"@description",
-		"properties":[
+	"Application":{
+		"Name":"@com.ruyi.PlatformerGame",
+		"Icon":"icon.png",
+		"Description":"@description",
+		"Properties":[
 			"SinglePlayer",
 			"RuyiAchievements"
 		],
-		"platform":[
+		"Platform":[
 			"RuyiConsole",
 			"Windows",
 		],
-		"size":12580,
-		"languages":[
+		"Size":12580,
+		"Languages":[
 			{
-				"languageCode":"en-US",
-				"uiInterface":true,
-				"fullAudio":true,
-				"subtitles":true,
+				"LanguageCode":"en-US",
+				"Ui":true,
+				"FullAudio":true,
+				"Subtitles":true,
 			},
 			{
-				"languageCode":"ja-JP",
-				"uiInterface":true,
-				"fullAudio":false,
-				"subtitles":true,
+				"LanguageCode":"ja-JP",
+				"Ui":true,
+				"FullAudio":false,
+				"Subtitles":true,
 			},
 		],
 		
-		"activity":[
+		"Activity":[
 			{
-				"name":"main",
-				"exePath":"PlatformerGame/PlatformerGame.exe",
-				"description":"@description",
+				"Name":"main",
+				"ExePath":"PlatformerGame/PlatformerGame.exe",
+				"Description":"@description",
 			}
 		],
 	},
-	"use_permissions":[
+	"Permissions":[
 		{
-			"name":"jade.permission.ACHIEVEMENT"
+			"Name":"jade.permission.ACHIEVEMENT"
 		}
 	],
-	"gamedb":{
-		"id": 6003,
-		"name": "PlatformerGame",
-		"conditions":[
-			{"name": "is-PlatformerGame.exe-present", "type": "ExePresent", "additionalArg": "PlatformerGame.exe"}
+	"GameDb":{
+		"Id": 6003,
+		"Name": "PlatformerGame",
+		"Conditions":[
+			{"Name": "is-PlatformerGame.exe-present", "Type": "ExePresent", "AdditionalArg": "PlatformerGame.exe"}
 		],
-		"detection": [
-			{"name": "PlatformerGame", "order": "1", "rules": [
-				{"cond": "is-PlatformerGame.exe-present"}
+		"Detection": [
+			{"Name": "PlatformerGame", "Order": 1, "Rules": [
+				{"Cond": "is-PlatformerGame.exe-present"}
 			]}
 		],
-		"runtime": {
-			"features":{},
-			"ruyifeatures":{}
+		"Runtime": {
+			"Features":{},
+			"RuyiFeatures":{}
 		}
 	}
 }
