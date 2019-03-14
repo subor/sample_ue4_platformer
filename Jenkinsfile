@@ -45,8 +45,7 @@ pipeline {
 		//CodeSigning
 		CODESIGNING_HOME = "${WIN32_TOOLS}/CodeSigning"
 		SCRIPTS = "${workspace}/${DEMO_PROJECT_ROOT}/basic_tools"
-		//Sign root
-		SIGN_ROOT = "${workspace}\\${COOKED_ROOT}"
+		MSBUILD = "${tool 'MSBuild'}"
 		//File path for saving commit id
 		COMMIT_ID_FILE = "${COOKED_ROOT}\\commit-id"
 		//Mail recipient on failed
@@ -100,7 +99,7 @@ pipeline {
 					step([$class:'CopyArtifact',filter:'RuyiSDKCpp/**/*,DevToolsInternal/**/*',target:"${TEMP_DIR}",projectName: "${jobName}",selector: sel])
 					
 					powershell '''
-					& "$env:SCRIPTS/ue4.ps1" -Commands copy_sdk -SourceSDK ${TEMP_DIR} -DestSDK ${DEMO_SDKCPP_ROOT}
+					& "$env:SCRIPTS/ue4.ps1" -Commands copy_sdk -SourceSDK $env:TEMP_DIR -DestSDK $env:DEMO_SDKCPP_ROOT
 					'''
 				}
 			}
@@ -119,7 +118,7 @@ pipeline {
 			steps{
 				withEnv(["PATH+NUGET_PACKAGES=${NUGET_PACKAGES}"]){
 					powershell '''
-					& "$env:SCRIPTS/ue4.ps1" -Commands build -Msbuild "${tool 'MSBuild'}"
+					& "$env:SCRIPTS/ue4.ps1" -Commands build -Msbuild "$env:MSBUILD" -Sln "$env:DEMO_PROJECT_ROOT/PlatformerGame.sln" -SourceSDK $env:TEMP_DIR
 					'''
 				}
 			}
@@ -137,7 +136,7 @@ pipeline {
 		stage('Cook Demo'){
 			steps{
 				powershell '''
-				& "$env:SCRIPTS/ue4.ps1" -Commands cook -UE4 "$UE_ROOT"
+				& "$env:SCRIPTS/ue4.ps1" -Commands cook -UE4 $env:UE_ROOT -SourceSDK $env:TEMP_DIR
 				'''
 
 				script {
@@ -233,8 +232,11 @@ void codeSign(){
 	echo 'Start processing code signing'
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'credentials_ruyi_codesign',
 			usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-		powershell '''
-			& "$env:SCRIPTS/sign.ps1" -path $env:SIGN_ROOT -signtool $env:CODESIGNING_HOME/x64/signtool.exe -password $env:PASSWORD -certificate $env:CODESIGNING_HOME/RUYI-CERT.pfx
+		def res = powershell '''
+			& "$env:SCRIPTS/sign.ps1" -path "$env:workspace/$env:COOKED_ROOT" -signtool $env:CODESIGNING_HOME/x64/signtool.exe -password $env:PASSWORD -certificate $env:CODESIGNING_HOME/RUYI-CERT.pfx
 			'''
+		if (res != 0) {
+		    currentBuild.result = 'UNSTABLE'
+		}
 	}
 }
