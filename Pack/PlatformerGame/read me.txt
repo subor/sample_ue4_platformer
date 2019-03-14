@@ -1,1 +1,0 @@
-This is the folder you put your game files, remember the xx.exe should be the same name as the folder name. For example in this it should be PlatformerGame.exe

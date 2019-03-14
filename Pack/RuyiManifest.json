@@ -35,7 +35,7 @@
 		"Activity":[
 			{
 				"Name":"main",
-				"ExePath":"PlatformerGame/PlatformerGame.exe",
+				"ExePath":"WindowsNoEditor/PlatformerGame.exe",
 				"Description":"@description",
 			}
 		],

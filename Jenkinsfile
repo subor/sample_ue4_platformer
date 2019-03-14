@@ -36,10 +36,6 @@ pipeline {
 		TEMP_DIR = 'temp'
 		//Root directory for all build tools
 		WIN32_TOOLS = "c:/jenkins/tools"
-		//Ruyi SDK CPP folder
-		RUYI_SDK_CPP = "${TEMP_DIR}\\RuyiSDKCpp"
-		//Ruyi DevTools folder
-		RUYI_DEV_ROOT = "${TEMP_DIR}\\DevToolsInternal"
 		//Unreal Demo Root
 		DEMO_PROJECT_ROOT = "sample_ue4_platformer"
 		//DEMO SDK CPP folder
@@ -48,6 +44,7 @@ pipeline {
 		COOKED_ROOT = "${DEMO_PROJECT_ROOT}\\Pack"
 		//CodeSigning
 		CODESIGNING_HOME = "${WIN32_TOOLS}/CodeSigning"
+		SCRIPTS = "${workspace}/${DEMO_PROJECT_ROOT}/basic_tools"
 		//Sign root
 		SIGN_ROOT = "${workspace}\\${COOKED_ROOT}"
 		//File path for saving commit id
@@ -102,12 +99,9 @@ pipeline {
 						
 					step([$class:'CopyArtifact',filter:'RuyiSDKCpp/**/*,DevToolsInternal/**/*',target:"${TEMP_DIR}",projectName: "${jobName}",selector: sel])
 					
-					bat """
-						md ${DEMO_SDKCPP_ROOT}\\lib
-						xcopy ${RUYI_SDK_CPP}\\lib\\* /s /i /y ${DEMO_SDKCPP_ROOT}\\lib\\*
-						md ${DEMO_SDKCPP_ROOT}\\include
-						xcopy ${RUYI_SDK_CPP}\\include\\* /s /i /y ${DEMO_SDKCPP_ROOT}\\include\\*
-					"""
+					powershell '''
+					& "$env:SCRIPTS/ue4.ps1" -Commands copy_sdk -SourceSDK ${TEMP_DIR} -DestSDK ${DEMO_SDKCPP_ROOT}
+					'''
 				}
 			}
 			
@@ -123,19 +117,10 @@ pipeline {
 		
 		stage('Build Libs'){
 			steps{
-				//1.Generate VS project file
-				bat """
-					chcp ${WIN_CMD_ENCODING} 
-					"${UE_ROOT}/Binaries/DotNET/UnrealBuildTool.exe" -projectfiles -project="${workspace}/${DEMO_PROJECT_ROOT}/PlatformerGame.uproject" -CurrentPlatform -2017 -game -rocket -progress
-				"""
 				withEnv(["PATH+NUGET_PACKAGES=${NUGET_PACKAGES}"]){
-					//2.VS Build target - Development & Shipping in Win64 platform
-					bat """
-						chcp ${WIN_CMD_ENCODING}
-						"${tool 'MSBuild'}" "${DEMO_PROJECT_ROOT}\\PlatformerGame.sln" /t:restore;build /m:4 /p:Configuration="Development Editor" /p:Platform="Win64"
-						"${tool 'MSBuild'}" "${DEMO_PROJECT_ROOT}\\PlatformerGame.sln" /t:restore;build /m:4 /p:Configuration=Development /p:Platform="Win64"
-						"${tool 'MSBuild'}" "${DEMO_PROJECT_ROOT}\\PlatformerGame.sln" /t:restore;build /m:4 /p:Configuration=Shipping /p:Platform="Win64"
-					"""
+					powershell '''
+					& "$env:SCRIPTS/ue4.ps1" -Commands build -Msbuild "${tool 'MSBuild'}"
+					'''
 				}
 			}
 			
@@ -151,23 +136,9 @@ pipeline {
 		
 		stage('Cook Demo'){
 			steps{
-				//Cook
-				bat """
-					chcp ${WIN_CMD_ENCODING}
-					del ${DEMO_PROJECT_ROOT}\\Pack.zip /F /Q
-					xcopy ${RUYI_SDK_CPP}\\lib\\zmq\\libzmq.dll ${DEMO_PROJECT_ROOT.replaceAll('/','\\\\')}\\Binaries\\Win64 /i /y
-					xcopy ${RUYI_SDK_CPP}\\lib\\boost\\*.dll ${DEMO_PROJECT_ROOT.replaceAll('/','\\\\')}\\Binaries\\Win64 /i /y
-					"${UE_ROOT}/Build/BatchFiles/RunUAT.bat" BuildCookRun -project="${workspace}/${DEMO_PROJECT_ROOT}/PlatformerGame.uproject" -noP4 -platform=Win64 -clientconfig=Development -serverconfig=Development -cook -maps=AllMaps --NoCompile -stage -pak -archive -archivedirectory="${workspace}/${COOKED_ROOT}"
-				"""
-				
-				//Rename & Copy runtime dependencies
-				bat """
-					chcp ${WIN_CMD_ENCODING}
-					rd ${COOKED_ROOT.replaceAll('/','\\\\')}\\PlatformerGame /S /Q
-					ren ${COOKED_ROOT.replaceAll('/','\\\\')}\\WindowsNoEditor PlatformerGame
-					xcopy ${RUYI_SDK_CPP}\\lib\\zmq\\libzmq.dll ${COOKED_ROOT.replaceAll('/','\\\\')}\\PlatformerGame /i /y
-					xcopy ${RUYI_SDK_CPP}\\lib\\boost\\*.dll ${COOKED_ROOT.replaceAll('/','\\\\')}\\PlatformerGame /i /y
-				"""
+				powershell '''
+				& "$env:SCRIPTS/ue4.ps1" -Commands cook -UE4 "$UE_ROOT"
+				'''
 
 				script {
 					if (params.CODE_SIGN) {
@@ -260,22 +231,10 @@ void stage_failed(stage){
 
 void codeSign(){
 	echo 'Start processing code signing'
-	dir(CODESIGNING_HOME){
-		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'credentials_ruyi_codesign',
-				usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-			bat """
-				echo %date% %time% >cgrecord.log
-				for /f %%i in ('dir ${SIGN_ROOT.replaceAll('/','\\\\')}\\*.exe /s /b') do x64\\signtool.exe sign /f RUYI-CERT.pfx /p %PASSWORD% /fd sha256 /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp /as /v %%i
-				echo %date% %time% >>cgrecord.log
-				for /f %%i in ('dir ${SIGN_ROOT.replaceAll('/','\\\\')}\\*.dll /s /b') do x64\\signtool.exe sign /f RUYI-CERT.pfx /p %PASSWORD% /fd sha256 /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp /as /v %%i
-				echo %date% %time% >>cgrecord.log
-				for /f %%i in ('dir ${SIGN_ROOT.replaceAll('/','\\\\')}\\*.sys /s /b') do x64\\signtool.exe sign /f RUYI-CERT.pfx /p %PASSWORD% /fd sha256 /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp /as /v %%i
-				echo %date% %time% >>cgrecord.log
-				for /f %%i in ('dir ${SIGN_ROOT.replaceAll('/','\\\\')}\\*.cat /s /b') do x64\\signtool.exe sign /f RUYI-CERT.pfx /p %PASSWORD% /fd sha256 /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp /as /v %%i
-				echo %date% %time% >>cgrecord.log
-				for /f %%i in ('dir ${SIGN_ROOT.replaceAll('/','\\\\')}\\*.ocx /s /b') do x64\\signtool.exe sign /f RUYI-CERT.pfx /p %PASSWORD% /fd sha256 /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp /as /v %%i
-				echo %date% %time% >>cgrecord.log
-			"""
-		}
+	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'credentials_ruyi_codesign',
+			usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+		powershell '''
+			& "$env:SCRIPTS/sign.ps1" -path $env:SIGN_ROOT -signtool $env:CODESIGNING_HOME/x64/signtool.exe -password $env:PASSWORD -certificate $env:CODESIGNING_HOME/RUYI-CERT.pfx
+			'''
 	}
 }
