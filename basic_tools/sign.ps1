@@ -1,5 +1,8 @@
 param (
-    [string]$signtool = "C:\Program Files (x86)\Windows Kits\10\bin\x86\signtool.exe",
+    [Parameter(HelpMessage = "Windows SDK directory containing signtool.exe.  Only used if SignTool is ''")]
+    [string]$SignTool = "C:\Program Files (x86)\Windows Kits\10\bin\x86\",
+    [Parameter(HelpMessage = "Directory containing Subor SDK copy of signing binaries")]
+    [string]$Tools = "$PSScriptRoot/windowsKits/",
     [Parameter(Mandatory=$true)][string]$password,
     [Parameter(Mandatory=$true)][string]$certificate,
     [string[]]$patterns = @("*.exe","*.dll","*.sys","*.cat","*.ocx"),
@@ -24,6 +27,16 @@ Push-Location $path
 $location = Get-Location
 $total_start = Get-Date
 
+if (!$Tools) {
+    $Tools = $SignTool
+}
+if (!(Test-Path $Tools/signtool.exe -PathType Leaf)){
+    Write-Error "$Tools/signtool.exe not found" -ErrorAction Stop
+}
+if (!(Test-Path $Tools/delcert.exe -PathType Leaf)){
+    Write-Warning "$Tools/delcert.exe not found.  Will be unable to re-sign already signed files."
+}
+
 Get-Job | Remove-Job # Remove existing jobs
 foreach ($pattern in $patterns) {
     $pattern_start = Get-Date
@@ -45,15 +58,22 @@ foreach ($pattern in $patterns) {
 
         $job_script = {
             param (
-                $location, $signtool, $certificate, $password, $files
+                $location, $Tools, $certificate, $password, $files
             )
             # Make sure all jobs are running from same working directory
             Set-Location $location
             # Sign all files that match the pattern in the directory
-            $cmd = '"' + $signtool + '"' + " sign /f $certificate /p $password /fd sha256 /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp /as /v " + $files
-            Invoke-Expression "& $cmd"
+            $cmd = "`"$Tools/signtool.exe`" sign /f $certificate /p $password /fd sha256 /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp /as /v " + $files
+            $res = Invoke-Expression "& $cmd 2>&1"
+            # Check if failed to sign, but may be able to delete cert and sign.
+            # Using `signtool.exe remove` fails with 0x00000057, so we use delcert.exe like devtool's signtool
+            if ($LASTEXITCODE -and ($res -match "0x800700C1")) {
+                & $Tools/delcert.exe $files
+                # Try re-signing
+                Invoke-Expression "& $cmd"
+            }
         }
-        Start-Job $job_script -ArgumentList @($location, $signtool, $certificate, $password, $files) | Out-Null
+        Start-Job $job_script -ArgumentList @($location, $Tools, $certificate, $password, $files) | Out-Null
     }
     
     $duration = New-TimeSpan -Start $pattern_start -End (Get-Date)
