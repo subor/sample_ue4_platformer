@@ -233,7 +233,7 @@ void codeSign(){
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'credentials_ruyi_codesign',
 			usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
 		def res = powershell returnStatus: true, script: '''
-			& "$env:SCRIPTS/sign.ps1" -path "$env:workspace/$env:COOKED_ROOT" -Tools $env:CODESIGNING_HOME/x64/ -password $env:PASSWORD -certificate $env:CODESIGNING_HOME/RUYI-CERT.pfx
+			& "$env:SCRIPTS/sign.ps1" -path "$env:workspace/$env:COOKED_ROOT" -Tools "$env:workspace/$env:TEMP_DIR/DevToolsInternal/" -password $env:PASSWORD -certificate $env:CODESIGNING_HOME/RUYI-CERT.pfx
 			'''
 		if (res != 0) {
 		    currentBuild.result = 'UNSTABLE'
